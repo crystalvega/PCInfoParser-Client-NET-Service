@@ -5,6 +5,7 @@ using System.Management;
 using System.ServiceProcess;
 using System.Text;
 using System.Threading.Tasks;
+using System.Drawing.Printing;
 
 namespace PCInfoParser_Client_NET_Service
 {
@@ -15,23 +16,8 @@ namespace PCInfoParser_Client_NET_Service
         /// </summary>
         static void Main()
         {
-            string pnpDeviceId = "";
-            ManagementObjectSearcher searcher = new ManagementObjectSearcher("SELECT PNPDeviceID FROM Win32_DesktopMonitor");
-            ManagementObjectCollection monitors = searcher.Get();
-            ManagementObject firstMonitor = null;
-            foreach (ManagementObject monitor in monitors)
-            {
-                firstMonitor = monitor;
-                break;
-            }
-            if (firstMonitor != null)
-            {
-                pnpDeviceId = (string)firstMonitor["PNPDeviceID"];
-                Console.WriteLine(pnpDeviceId);
-            }
-            object[] result = GetDisplay.Get(pnpDeviceId);
-            Console.WriteLine(result[0]);
-            Console.WriteLine(result[1]);
+            //string[,] general = GetConfiguration.General();
+            List<string[,]> disk = GetConfiguration.Disk();
             ServiceBase[] ServicesToRun;
             ServicesToRun = new ServiceBase[]
             {
