@@ -5,17 +5,12 @@ using Hardware.Info;
 using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
-using DocumentFormat.OpenXml.Packaging;
-using DocumentFormat.OpenXml.Spreadsheet;
-using System.Linq;
-using System.Runtime.InteropServices;
-using Ardalis.SmartEnum;
-using System.ComponentModel;
+using System.Diagnostics;
+using System.Drawing.Printing;
 using System.IO;
 using System.Linq;
 using System.Management;
 using System.Reflection;
-
 namespace PCInfoParser_Client_NET_Service
 {
     public static class Get
@@ -154,14 +149,9 @@ namespace PCInfoParser_Client_NET_Service
         }
         public static string[] CPU()
         {
-            string[] wordsToReplace = { "12th Gen", "11th Gen", "10th Gen", "(R)", "(TM)", "CPU", "with Radeon Vega Graphics", "Mobile", "Processor", "Quad-Core", "(tm)", "6-Core" };
             string[] returnvalue = new string[2] {"",""};
             hardwareInfo.RefreshCPUList();
             string cpu = hardwareInfo.CpuList[0].Name;
-            for (int i = 0; i < wordsToReplace.Length; i++)
-            {
-                cpu = cpu.Replace(wordsToReplace[i], "");
-            }
             returnvalue[0] = cpu.Trim();
             returnvalue[1] = hardwareInfo.CpuList[0].MaxClockSpeed.ToString();
 
@@ -171,7 +161,6 @@ namespace PCInfoParser_Client_NET_Service
         {
             List<string[]> data = new List<string[]>();
             Assembly assembly = Assembly.GetExecutingAssembly();
-            string[] resourceNames = assembly.GetManifestResourceNames();
             Stream stream = assembly.GetManifestResourceStream("PCInfoParser_Client_NET_Service.db.xlsx");
             using (SpreadsheetDocument spreadsheetDocument = SpreadsheetDocument.Open(stream, false))
             {
@@ -220,7 +209,7 @@ namespace PCInfoParser_Client_NET_Service
             string[] stringData = new string[5];
             foreach (string[] tableData in table)
             {
-                if (tableData[0] == cpu)
+                if (cpu.Contains(tableData[0]))
                 {
                     stringData = tableData;
                     break;
@@ -306,7 +295,7 @@ namespace PCInfoParser_Client_NET_Service
             General[4, 1] = printer[0];
             General[5, 1] = typepc;
             General[6, 1] = motherboard;
-            General[7, 1] = cpu[0];
+            General[7, 1] = upgrade[0];
             General[8, 1] = cpu[1];
             General[9, 1] = upgrade[1];
             General[10, 1] = upgrade[2];
@@ -355,12 +344,12 @@ namespace PCInfoParser_Client_NET_Service
         internal GetSmart()
         {
             List<string> smart = new List<string>();
-            string exePath = "DiskInfo32.exe";
+            string exePath = "C:\\Windows\\Temp\\DiskInfo\\DiskInfo32.exe";
             string arguments = "/copyexit";
             string[] values = new string[7] { "Model", "Power On Hours", "Power On Count", "Firmware", "Disk Size", "Temperature", "Health Status" };
             Process.Start(exePath, arguments).WaitForExit();
 
-            string[] lines = File.ReadAllLines("diskinfo.txt");
+            string[] lines = File.ReadAllLines("C:\\Windows\\Temp\\DiskInfo\\diskinfo.txt");
             bool start = false;
             bool endlinecheck = false;
             foreach (string line in lines)

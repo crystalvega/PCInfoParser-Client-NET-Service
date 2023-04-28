@@ -1,52 +1,15 @@
 ﻿using System;
+using System.Reflection;
 using System.ServiceProcess;
 
 namespace PCInfoParser_Client_NET_Service
 {
     internal static class Program
     {
-        private static bool IsInstalled()
-        {
-            using (ServiceController controller =
-                new ServiceController("PCInfoParcer"))
-            {
-                try
-                {
-                    ServiceControllerStatus status = controller.Status;
-                }
-                catch
-                {
-                    return false;
-                }
-                return true;
-            }
-        }
-
-        private static void StartService()
-        {
-            if (!IsInstalled()) return;
-
-            using (ServiceController controller =
-                new ServiceController("PCInfoParcer"))
-            {
-                try
-                {
-                    if (controller.Status != ServiceControllerStatus.Running)
-                    {
-                        controller.Start();
-                        controller.WaitForStatus(ServiceControllerStatus.Running,
-                            TimeSpan.FromSeconds(10));
-                    }
-                }
-                catch
-                {
-                    throw;
-                }
-            }
-        }
         /// <summary>
         /// Главная точка входа для приложения.
         /// </summary>
+
         static void Main(string[] args)
         {
             if (Environment.UserInteractive)
@@ -58,16 +21,16 @@ namespace PCInfoParser_Client_NET_Service
                         case "--install":
                             try
                             {
-                                var appPath = System.Reflection.Assembly.GetExecutingAssembly().Location;
+                                var appPath = Assembly.GetExecutingAssembly().Location;
                                 System.Configuration.Install.ManagedInstallerClass.InstallHelper(new string[] { appPath });
-                                StartService();
+                                Service.Start("PCInfoParcer");
                             }
                             catch (Exception ex) { Console.WriteLine(ex.Message); }
                             break;
                         case "--uninstall":
                             try
                             {
-                                var appPath = System.Reflection.Assembly.GetExecutingAssembly().Location;
+                                var appPath = Assembly.GetExecutingAssembly().Location;
                                 System.Configuration.Install.ManagedInstallerClass.InstallHelper(new string[] { "/u", appPath });
                             }
                             catch (Exception ex) { Console.WriteLine(ex.Message); }
