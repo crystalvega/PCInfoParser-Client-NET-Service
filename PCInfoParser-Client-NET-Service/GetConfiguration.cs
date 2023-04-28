@@ -5,11 +5,16 @@ using Hardware.Info;
 using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Drawing.Printing;
+using DocumentFormat.OpenXml.Packaging;
+using DocumentFormat.OpenXml.Spreadsheet;
+using System.Linq;
+using System.Runtime.InteropServices;
+using Ardalis.SmartEnum;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Management;
+using System.Reflection;
 
 namespace PCInfoParser_Client_NET_Service
 {
@@ -165,8 +170,10 @@ namespace PCInfoParser_Client_NET_Service
         private static List<string[]> CPULoad()
         {
             List<string[]> data = new List<string[]>();
-
-            using (SpreadsheetDocument spreadsheetDocument = SpreadsheetDocument.Open("db.xlsx", false))
+            Assembly assembly = Assembly.GetExecutingAssembly();
+            string[] resourceNames = assembly.GetManifestResourceNames();
+            Stream stream = assembly.GetManifestResourceStream("PCInfoParser_Client_NET_Service.db.xlsx");
+            using (SpreadsheetDocument spreadsheetDocument = SpreadsheetDocument.Open(stream, false))
             {
                 WorkbookPart workbookPart = spreadsheetDocument.WorkbookPart;
                 IEnumerable<Sheet> sheets = workbookPart.Workbook.Descendants<Sheet>();
@@ -292,7 +299,6 @@ namespace PCInfoParser_Client_NET_Service
             string os = Get.OS();
             string[] ram = Get.RAM();
             string antivirus = Get.Antivirus();
-
 
             General[1, 1] = display[0];
             General[2, 1] = display[1];
