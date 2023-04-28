@@ -1,11 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Management;
-using System.ServiceProcess;
-using System.Text;
-using System.Threading.Tasks;
-using System.Drawing.Printing;
+﻿using System.ServiceProcess;
 
 namespace PCInfoParser_Client_NET_Service
 {
@@ -16,8 +9,8 @@ namespace PCInfoParser_Client_NET_Service
         /// </summary>
         static void Main()
         {
-            //string[,] general = GetConfiguration.General();
-            List<string[,]> disk = GetConfiguration.Disk();
+            string[,,] smart = GetConfiguration.Disk();
+            string[,] general = GetConfiguration.General(smart);
             ServiceBase[] ServicesToRun;
             ServicesToRun = new ServiceBase[]
             {

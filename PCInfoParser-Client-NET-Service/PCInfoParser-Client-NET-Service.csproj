@@ -48,6 +48,9 @@
     <Reference Include="Hardware.Info, Version=11.0.1.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\Hardware.Info.11.0.1\lib\netstandard2.0\Hardware.Info.dll</HintPath>
     </Reference>
+    <Reference Include="Krugertech.IO.Smart, Version=1.0.3.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Krugertech.IO.Smart.1.0.3\lib\netstandard2.0\Krugertech.IO.Smart.dll</HintPath>
+    </Reference>
     <Reference Include="Microsoft.IO.RecyclableMemoryStream, Version=1.4.1.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.IO.RecyclableMemoryStream.1.4.1\lib\net46\Microsoft.IO.RecyclableMemoryStream.dll</HintPath>
     </Reference>
@@ -104,13 +107,19 @@
     <AdditionalFiles Include="db.xlsx">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </AdditionalFiles>
+    <EmbeddedResource Include="CdiResource\language\English.lang">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </EmbeddedResource>
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="GetConfiguration\" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="AMD_RC2t7x86.dll">
+    <EmbeddedResource Include="CdiResource\dialog\Graph.html">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="DiskInfo32.exe">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </EmbeddedResource>
   </ItemGroup>
