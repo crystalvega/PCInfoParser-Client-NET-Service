@@ -49,9 +49,17 @@ namespace PCInfoParser_Client_NET_Service
     }
     internal static class Command
     {
+        public static string AssemblyDirectory()
+        {
+            string codeBase = Assembly.GetExecutingAssembly().CodeBase;
+            UriBuilder uri = new UriBuilder(codeBase);
+            string path = Uri.UnescapeDataString(uri.Path);
+            return Path.GetDirectoryName(path);
+        }
         public static void FileSave(string filename, string[,] arr)
         {
-            StreamWriter writer = new StreamWriter(filename);
+            string Directory = Path.Combine(AssemblyDirectory(), filename);
+            StreamWriter writer = new StreamWriter(Directory);
 
             // Записываем размеры массива в первую строку файла
             writer.WriteLine(arr.GetLength(0));
@@ -62,7 +70,7 @@ namespace PCInfoParser_Client_NET_Service
             {
                 for (int j = 0; j < arr.GetLength(1); j++)
                 {
-                    writer.Write(arr[i, j] + " ");
+                    writer.Write(arr[i, j] + "§");
                 }
                 writer.WriteLine();
             }
@@ -70,9 +78,18 @@ namespace PCInfoParser_Client_NET_Service
             // Закрываем файл
             writer.Close();
         }
+        public static void FileRemove(string filename) 
+        {
+            string Directory = Path.Combine(AssemblyDirectory(), filename);
+            if (File.Exists(Directory))
+            {
+                File.Delete(Directory);
+            }
+        }
         public static void FileSave(string filename, string[,,] arr)
         {
-            StreamWriter writer = new StreamWriter(filename);
+            string Directory = Path.Combine(AssemblyDirectory(), filename);
+            StreamWriter writer = new StreamWriter(Directory);
 
             // Записываем размеры массива в первую строку файла
             writer.WriteLine(arr.GetLength(0));
@@ -86,7 +103,7 @@ namespace PCInfoParser_Client_NET_Service
                 {
                     for (int k = 0; k < arr.GetLength(2); k++)
                     {
-                        writer.Write(arr[i, j, k] + " ");
+                        writer.Write(arr[i, j, k] + "§");
                     }
                     writer.WriteLine();
                 }
@@ -99,7 +116,7 @@ namespace PCInfoParser_Client_NET_Service
         public static void UnpackExe()
         {
             // Получаем путь к системному каталогу (обычно C:\Windows\System32)
-            string systemDirectory = Path.Combine("C:\\Windows\\Temp", "DiskInfo");
+            string systemDirectory = Path.Combine(AssemblyDirectory(), "DiskInfo");
             string exePath = Path.Combine(systemDirectory, "DiskInfo32.exe");
             string cdiFolder = Path.Combine(systemDirectory, "CdiResource");
             string dialogFolder = Path.Combine(cdiFolder, "dialog");

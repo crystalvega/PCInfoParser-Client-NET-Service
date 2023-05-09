@@ -23,7 +23,7 @@ namespace PCInfoParser_Client_NET_Service
             try
             {
                 RegistryKey rawKeyA = registry.OpenSubKey("SYSTEM\\CurrentControlSet\\Enum\\" + dir + "\\Device Parameters");
-                string name = "EDID";//(string)rawKeyA.GetValue(i.ToString());
+                string name = "EDID";
                 byte[] value = (byte[])rawKeyA.GetValue(name);
                 key = value;
             }
@@ -344,12 +344,13 @@ namespace PCInfoParser_Client_NET_Service
         internal GetSmart()
         {
             List<string> smart = new List<string>();
-            string exePath = "C:\\Windows\\Temp\\DiskInfo\\DiskInfo32.exe";
+            string directory = Path.Combine(Command.AssemblyDirectory(), "DiskInfo");
+            string exePath = Path.Combine(directory, "DiskInfo32.exe");
             string arguments = "/copyexit";
             string[] values = new string[7] { "Model", "Power On Hours", "Power On Count", "Firmware", "Disk Size", "Temperature", "Health Status" };
             Process.Start(exePath, arguments).WaitForExit();
 
-            string[] lines = File.ReadAllLines("C:\\Windows\\Temp\\DiskInfo\\diskinfo.txt");
+            string[] lines = File.ReadAllLines(Path.Combine(directory, "diskinfo.txt"));
             bool start = false;
             bool endlinecheck = false;
             foreach (string line in lines)

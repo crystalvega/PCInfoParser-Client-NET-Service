@@ -29,8 +29,8 @@ namespace PCInfoParser_Client_NET_Service
                 Command.UnpackExe();
                 string[,,] smart = GetConfiguration.Disk();
                 string[,] general = GetConfiguration.General(smart);
-                Command.FileSave("C:\\Windows\\Temp\\Smart.txt", smart);
-                Command.FileSave("C:\\Windows\\Temp\\General.txt", general);
+                Command.FileSave("Smart.txt", smart);
+                Command.FileSave("General.txt", general);
                 while (!_cancel)
                 {
                     Thread.Sleep(100);
@@ -42,7 +42,8 @@ namespace PCInfoParser_Client_NET_Service
         protected override void OnStop()
         {
             _cancel = true;
-
+            Command.FileRemove("Smart.txt");
+            Command.FileRemove("General.txt");
             EventLog.WriteEntry("We did it! Stoped", EventLogEntryType.Information);
         }
     }
