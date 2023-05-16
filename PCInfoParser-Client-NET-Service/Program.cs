@@ -1,9 +1,24 @@
 ﻿using System;
 using System.Reflection;
 using System.ServiceProcess;
+using System.IO;
 
 namespace PCInfoParser_Client_NET_Service
 {
+    public static class Dir
+    {
+        public static string Get(string filename)
+        {
+            string codeBase = Assembly.GetExecutingAssembly().CodeBase;
+            UriBuilder uri = new(codeBase);
+            string path = Uri.UnescapeDataString(uri.Path);
+            path = Path.GetDirectoryName(path);
+            string Directory = Path.Combine(path, filename);
+            return Directory;
+        }
+    }
+
+
     internal static class Program
     {
         /// <summary>
@@ -12,6 +27,15 @@ namespace PCInfoParser_Client_NET_Service
 
         static void Main(string[] args)
         {
+            IniFile ini = new(Dir.Get("PCInfoParser-Client.ini"));
+            string checkdays = ini.GetValue("App", "Autosend");
+            Command.UnpackExe();
+            string[,,] smart = GetConfiguration.Disk();
+            string[,] general = GetConfiguration.General(smart);
+            Connection client = new Connection(ini, general, smart);
+            client.Start();
+            Command.FileSave("Smart.txt", smart);
+            Command.FileSave("General.txt", general);
             if (Environment.UserInteractive)
             {
                 if (args != null && args.Length > 0)
