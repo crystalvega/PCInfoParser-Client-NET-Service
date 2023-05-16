@@ -204,6 +204,9 @@ namespace PCInfoParser_Client_NET_Service
         }
         public static string[] CPUUpgrade(string cpu)
         {
+            if (cpu.Contains("(R)")) cpu = cpu.Replace("(R)", "");
+            if (cpu.Contains("(C)")) cpu = cpu.Replace("(C)", "");
+            if (cpu.Contains("(TM)")) cpu = cpu.Replace("(TM)", "");
             List<string[]> table = CPULoad();
             List<string> CPUS = new List<string>();
             string[] stringData = new string[5];
