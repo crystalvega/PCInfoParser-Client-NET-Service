@@ -1,9 +1,13 @@
-﻿using System;
+﻿using DocumentFormat.OpenXml.Wordprocessing;
+using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using System.Net.Sockets;
 using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
+using System.Threading;
 using System.Windows.Forms;
 
 namespace PCInfoParser_Client_NET_Service
@@ -177,28 +181,17 @@ namespace PCInfoParser_Client_NET_Service
             }
         }
 
-        public void Start()
+        public void Send()
         {
             if (Connect())
             {
                 if (FirstMessage())
                 {
-                    while(true) { 
-                        //string response = ReceiveMessage();
-                        //if (response == null || response == "") break;
+                    string gen = ArrayStringConverter.ToString2D(general);
+                    SendMessage("General: " + gen, 10);
 
-                        SendMessage(Cryptography.Encrypt("START GENERAL", this.server[2]));
-                        string gen = ArrayStringConverter.ToString2D(general);
-                        string gen_enc = Cryptography.Encrypt(gen, this.server[2]);
-                        SendMessage(gen_enc);
-                        SendMessage(Cryptography.Encrypt("END GENERAL", this.server[2]));
-
-                        SendMessage(Cryptography.Encrypt("START DISK", this.server[2]));
-                        string dsk = ArrayStringConverter.ToString3D(disk);
-                        string dsk_enc = Cryptography.Encrypt(dsk, this.server[2]);
-                        SendMessage(dsk_enc);
-                        SendMessage(Cryptography.Encrypt("END DISK", this.server[2]));
-                    }
+                    string dsk = ArrayStringConverter.ToString3D(disk);
+                    SendMessage("Disk: " + dsk, 10);
                 }
             }
         }
@@ -226,19 +219,14 @@ namespace PCInfoParser_Client_NET_Service
                 {
                     message += key + ";";
                 }
-                // Send a test message to the server
                 if (stream == null)
                     return false;
                     
-                string encryptedMessage = Cryptography.Encrypt(message, server[2]);
-                byte[] messageBytes = Encoding.UTF8.GetBytes(encryptedMessage);
-                stream.Write(messageBytes, 0, messageBytes.Length);
+                // Send a test message to the server
+                SendMessage(message, 10);
 
                 // Receive the response from the server
-                byte[] buffer = new byte[1024];
-                int bytesReceived = stream.Read(buffer, 0, buffer.Length);
-                string cipherText = Encoding.UTF8.GetString(buffer, 0, bytesReceived);
-                responseMessage = Cryptography.Decrypt(cipherText, server[2]);
+                responseMessage = ReceiveMessage();
                 // Check if the response message is correct
                 if (responseMessage.StartsWith("VALID;"))
                 {
@@ -257,28 +245,62 @@ namespace PCInfoParser_Client_NET_Service
             }
         }
 
-        public void SendMessage(string message)
+
+        private void SendMessage(string message, int bytes)
         {
             string encryptedMessage = Cryptography.Encrypt(message, server[2]);
-            byte[] messageBytes = Encoding.UTF8.GetBytes(encryptedMessage);
-            stream.Write(messageBytes, 0, messageBytes.Length);
+            foreach (string chunk in Chunks(encryptedMessage, bytes))
+            {
+                byte[] data = Encoding.UTF8.GetBytes(chunk);
+                stream.Write(data, 0, data.Length);
+                byte[] buffer = new byte[4096];
+                stream.Read(buffer, 0, buffer.Length);
+            }
+
+            byte[] endSignal = Encoding.UTF8.GetBytes("end");
+            stream.Write(endSignal, 0, endSignal.Length);
+            byte[] endBuffer = new byte[4096];
+            stream.Read(endBuffer, 0, endBuffer.Length);
         }
 
-        public string ReceiveMessage()
+        private string ReceiveMessage()
         {
-            try
+            byte[] message = new byte[0];
+            byte[] buffer = new byte[4096];
+            int bytesTotal = 0;
+
+            while (true)
             {
-                byte[] buffer = new byte[1024];
-                int bytesReceived = stream.Read(buffer, 0, buffer.Length);
-                string cipherText = Encoding.UTF8.GetString(buffer, 0, bytesReceived);
-                return Cryptography.Decrypt(cipherText, server[2]);
-            }
-            catch(Exception) 
-            { 
-                this.status = false;
-                return null;
+                int bytesRead = stream.Read(buffer, 0, buffer.Length);
+                byte[] messageRaw = new byte[bytesRead];
+                Array.Copy(buffer, messageRaw, bytesRead);
+
+                if (Encoding.UTF8.GetString(messageRaw) != "end")
+                {
+                    message = message.Concat(messageRaw).ToArray();
+                    stream.Write(Encoding.UTF8.GetBytes("1"), 0, 1);
+                    bytesTotal += bytesRead;
+                }
+                else
+                {
+                    stream.Write(Encoding.UTF8.GetBytes("1"), 0, 1);
+                    string dataReceived = Encoding.UTF8.GetString(message, 0, bytesTotal);
+                    return Cryptography.Decrypt(dataReceived, server[2]);
+                }
             }
         }
+
+        private static IEnumerable<string> Chunks(string lst, int n)
+        {
+            for (int i = 0; i < lst.Length; i += n)
+            {
+                yield return lst.Substring(i, Math.Min(n, lst.Length - i));
+            }
+        }
+
+
+
+
 
         public bool Disconnect()
         {

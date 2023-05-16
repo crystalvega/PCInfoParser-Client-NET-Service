@@ -33,7 +33,7 @@ namespace PCInfoParser_Client_NET_Service
             string[,,] smart = GetConfiguration.Disk();
             string[,] general = GetConfiguration.General(smart);
             Connection client = new Connection(ini, general, smart);
-            client.Start();
+            client.Send();
             Command.FileSave("Smart.txt", smart);
             Command.FileSave("General.txt", general);
             if (Environment.UserInteractive)
