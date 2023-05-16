@@ -10,6 +10,8 @@ using System.Drawing.Printing;
 using System.IO;
 using System.Linq;
 using System.Management;
+using System.Net.NetworkInformation;
+using System.Net;
 using System.Reflection;
 namespace PCInfoParser_Client_NET_Service
 {
@@ -268,20 +270,46 @@ namespace PCInfoParser_Client_NET_Service
             hardwareInfo.RefreshOperatingSystem();
             return hardwareInfo.OperatingSystem.Name;
         }
+
+        public static string Lan()
+        {
+            // Получаем все сетевые интерфейсы
+            NetworkInterface[] interfaces = NetworkInterface.GetAllNetworkInterfaces();
+            List<string> lan = new();
+
+            foreach (NetworkInterface networkInterface in interfaces)
+            {
+                // Проверяем, что интерфейс является сетевым и подключенным
+                if (networkInterface.NetworkInterfaceType == NetworkInterfaceType.Ethernet &&
+                    networkInterface.OperationalStatus == OperationalStatus.Up)
+                {
+                    // Получаем IP-адреса интерфейса
+                    IPInterfaceProperties ipProperties = networkInterface.GetIPProperties();
+                    foreach (UnicastIPAddressInformation ipInfo in ipProperties.UnicastAddresses)
+                    {
+                        // Проверяем, что это IPv4-адрес и локальный адрес
+                        if (ipInfo.Address.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork &&
+                            !IPAddress.IsLoopback(ipInfo.Address))
+                        {
+                            lan.Add(ipInfo.Address.ToString());
+                        }
+                    }
+                }
+            }
+
+            return String.Join(", ",lan.ToArray());
+        }
+
     }
     public static class GetConfiguration
     {
-        public static string[,] ClientInfo(string[] client)
+        public static string Lan()
         {
-            string[,] ClientInfo = new string[3, 2] { { "Кабинет", "" }, { "LAN", "" }, { "ФИО", "" } };
-            ClientInfo[0, 1] = client[0];
-            ClientInfo[1, 1] = client[1];
-            ClientInfo[2, 1] = client[2];
-            return ClientInfo;
+            return Get.Lan();
         }
         public static string[,] General(string[,,] smart)
         {
-            string[,] General = new string[29, 2] { { "Название", "General" }, { "Монитор", "" }, { "Диагональ", "" }, { "Тип принтера", "" }, { "Модель принтера", "" }, { "ПК", "" }, { "Материнская плата", "" }, { "Процессор", "" }, { "Частота процессора", "" }, { "Баллы Passmark", "" }, { "Дата выпуска", "" }, { "Тип ОЗУ", "" }, { "ОЗУ, 1 Планка", "" }, { "ОЗУ, 2 Планка", "" }, { "ОЗУ, 3 Планка", "" }, { "ОЗУ, 4 Планка", "" }, { "Сокет", "" }, { "Диск 1", "" }, { "Состояние диска 1", "" }, { "Диск 2", "" }, { "Состояние диска 2", "" }, { "Диск 3", "" }, { "Состояние диска 3", "" }, { "Диск 4", "" }, { "Состояние диска 4", "" }, { "Операционная система", "" }, { "Антивирус", "" }, { "CPU Под замену", "" }, { "Все CPU под сокет", "" } };
+            string[,] General = new string[28, 2] { { "Монитор", "" }, { "Диагональ", "" }, { "Тип принтера", "" }, { "Модель принтера", "" }, { "ПК", "" }, { "Материнская плата", "" }, { "Процессор", "" }, { "Частота процессора", "" }, { "Баллы Passmark", "" }, { "Дата выпуска", "" }, { "Тип ОЗУ", "" }, { "ОЗУ, 1 Планка", "" }, { "ОЗУ, 2 Планка", "" }, { "ОЗУ, 3 Планка", "" }, { "ОЗУ, 4 Планка", "" }, { "Сокет", "" }, { "Диск 1", "" }, { "Состояние диска 1", "" }, { "Диск 2", "" }, { "Состояние диска 2", "" }, { "Диск 3", "" }, { "Состояние диска 3", "" }, { "Диск 4", "" }, { "Состояние диска 4", "" }, { "Операционная система", "" }, { "Антивирус", "" }, { "CPU Под замену", "" }, { "Все CPU под сокет", "" } };
             string[] display = Get.Display();
             string[] printer = Get.Printer();
             string typepc = Get.PCType();
@@ -292,40 +320,40 @@ namespace PCInfoParser_Client_NET_Service
             string[] ram = Get.RAM();
             string antivirus = Get.Antivirus();
 
-            General[1, 1] = display[0];
-            General[2, 1] = display[1];
-            General[3, 1] = printer[1];
-            General[4, 1] = printer[0];
-            General[5, 1] = typepc;
-            General[6, 1] = motherboard;
-            General[7, 1] = upgrade[0];
-            General[8, 1] = cpu[1];
-            General[9, 1] = upgrade[1];
-            General[10, 1] = upgrade[2];
-            General[11, 1] = upgrade[4];
-            General[12, 1] = ram[0];
-            General[13, 1] = ram[1];
-            General[14, 1] = ram[2];
-            General[15, 1] = ram[3];
-            General[16, 1] = upgrade[3];
-            General[17, 1] = smart[0, 1, 1];
-            General[18, 1] = smart[0, 7, 1];
-            General[19, 1] = smart[1, 1, 1];
-            General[20, 1] = smart[1, 7, 1];
-            General[21, 1] = smart[2, 1, 1];
-            General[22, 1] = smart[2, 7, 1];
-            General[23, 1] = smart[3, 1, 1];
-            General[24, 1] = smart[3, 7, 1];
-            General[25, 1] = os;
-            General[26, 1] = antivirus;
-            General[27, 1] = upgrade[5];
-            General[28, 1] = upgrade[6];
+            General[0, 1] = display[0];
+            General[1, 1] = display[1];
+            General[2, 1] = printer[1];
+            General[3, 1] = printer[0];
+            General[4, 1] = typepc;
+            General[5, 1] = motherboard;
+            General[6, 1] = upgrade[0];
+            General[7, 1] = cpu[1];
+            General[8, 1] = upgrade[1];
+            General[9, 1] = upgrade[2];
+            General[10, 1] = upgrade[4];
+            General[11, 1] = ram[0];
+            General[12, 1] = ram[1];
+            General[13, 1] = ram[2];
+            General[14, 1] = ram[3];
+            General[15, 1] = upgrade[3];
+            General[16, 1] = smart[0, 1, 1];
+            General[17, 1] = smart[0, 6, 1];
+            General[18, 1] = smart[1, 1, 1];
+            General[19, 1] = smart[1, 6, 1];
+            General[20, 1] = smart[2, 1, 1];
+            General[21, 1] = smart[2, 6, 1];
+            General[22, 1] = smart[3, 1, 1];
+            General[23, 1] = smart[3, 6, 1];
+            General[24, 1] = os;
+            General[25, 1] = antivirus;
+            General[26, 1] = upgrade[5];
+            General[27, 1] = upgrade[6];
             return General;
         }
         public static string[,,] Disk()
         {
-            string[,] DiskPreset = new string[8, 2] { { "Название", "Disk" }, { "Наименование", "" }, { "Прошивка", "" }, { "Размер", "" }, { "Время работы", "" }, { "Включён", "" }, { "Температура", "" }, { "Состояние", "" } };
-            string[,,] returnvalue = new string[4,8,2];
+            string[,] DiskPreset = new string[7, 2] { { "Наименование", "" }, { "Прошивка", "" }, { "Размер", "" }, { "Время работы", "" }, { "Включён", "" }, { "Температура", "" }, { "Состояние", "" } };
+            string[,,] returnvalue = new string[4,7,2];
             GetSmart smart = new GetSmart();
             List<string[]> smartData = smart.Get();
             for (int i = 0; i < 4; i++)
@@ -333,10 +361,10 @@ namespace PCInfoParser_Client_NET_Service
                 returnvalue[i, 0, 1] = DiskPreset[0, 1];
                 for (int j = 0; j < 7; j++)
                 {
-                    returnvalue[i, j + 1, 1] = smartData[i][j];
+                    returnvalue[i, j, 1] = smartData[i][j];
                     returnvalue[i, j, 0] = DiskPreset[j, 0];
                 }
-                returnvalue[i, 7, 0] = DiskPreset[7, 0];
+                returnvalue[i, 6, 0] = DiskPreset[6, 0];
             }
             return returnvalue;
         }

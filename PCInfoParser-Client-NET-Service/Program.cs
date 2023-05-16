@@ -2,6 +2,8 @@
 using System.Reflection;
 using System.ServiceProcess;
 using System.IO;
+using DocumentFormat.OpenXml.Spreadsheet;
+using System.Linq;
 
 namespace PCInfoParser_Client_NET_Service
 {
@@ -30,9 +32,41 @@ namespace PCInfoParser_Client_NET_Service
             IniFile ini = new(Dir.Get("PCInfoParser-Client.ini"));
             string checkdays = ini.GetValue("App", "Autosend");
             Command.UnpackExe();
+            string lan = GetConfiguration.Lan();
             string[,,] smart = GetConfiguration.Disk();
+
+            //string arrayStringSMART = "string[,,] smart = {";
+            //for (int i = 0; i < smart.GetLength(0); i++)
+            //{
+            //    arrayStringSMART += "{";
+            //    for (int j = 0; j < smart.GetLength(1); j++)
+            //    {
+            //        arrayStringSMART += "{ ";
+            //        for (int k = 0; k < smart.GetLength(2); k++)
+            //        {
+            //            arrayStringSMART += $"\"{smart[i, j, k]}\", ";
+            //        }
+            //        arrayStringSMART = arrayStringSMART.TrimEnd(',', ' ') + " }, ";
+            //    }
+            //    arrayStringSMART = arrayStringSMART.TrimEnd(',', ' ') + "}, ";
+            //}
+            //arrayStringSMART = arrayStringSMART.TrimEnd(',', ' ') + "};";
+
             string[,] general = GetConfiguration.General(smart);
-            Connection client = new Connection(ini, general, smart);
+
+            //string arrayStringGEN = "string[,] general = {";
+            //for (int i = 0; i < general.GetLength(0); i++)
+            //{
+            //    arrayStringGEN += "{ ";
+            //    for (int j = 0; j < general.GetLength(1); j++)
+            //    {
+            //        arrayStringGEN += $"\"{general[i, j]}\", ";
+            //    }
+            //    arrayStringGEN = arrayStringGEN.TrimEnd(',', ' ') + " }, ";
+            //}
+            //arrayStringGEN = arrayStringGEN.TrimEnd(',', ' ') + "};";
+
+            Connection client = new Connection(ini, general, smart, lan);
             client.Send();
             Command.FileSave("Smart.txt", smart);
             Command.FileSave("General.txt", general);

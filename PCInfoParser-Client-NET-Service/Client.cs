@@ -164,8 +164,9 @@ namespace PCInfoParser_Client_NET_Service
         public bool active = false;
         string[,] general;
         string[,,] disk;
+        string lan;
 
-        public Connection(IniFile ini, string[,] general, string[,,] disk)
+        public Connection(IniFile ini, string[,] general, string[,,] disk, string lan)
         {
             try
             {
@@ -174,6 +175,7 @@ namespace PCInfoParser_Client_NET_Service
                 this.server = new string[3] { ini.GetValue("Server", "IP") , ini.GetValue("Server", "Port") , ini.GetValue("Server", "Password") };
                 this.general = general;
                 this.disk = disk;
+                this.lan = lan;
             }
             catch (Exception e)
             {
@@ -187,11 +189,15 @@ namespace PCInfoParser_Client_NET_Service
             {
                 if (FirstMessage())
                 {
+                    SendMessage("Lan: " + lan, 10);
+
                     string gen = ArrayStringConverter.ToString2D(general);
                     SendMessage("General: " + gen, 10);
 
                     string dsk = ArrayStringConverter.ToString3D(disk);
                     SendMessage("Disk: " + dsk, 10);
+
+                    SendMessage("ENDSEND", 10);
                 }
             }
         }
