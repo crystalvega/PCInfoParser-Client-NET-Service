@@ -2,8 +2,6 @@
 using System.Reflection;
 using System.ServiceProcess;
 using System.IO;
-using DocumentFormat.OpenXml.Spreadsheet;
-using System.Linq;
 
 namespace PCInfoParser_Client_NET_Service
 {

@@ -210,7 +210,7 @@ namespace PCInfoParser_Client_NET_Service
             if (cpu.Contains("(C)")) cpu = cpu.Replace("(C)", "");
             if (cpu.Contains("(TM)")) cpu = cpu.Replace("(TM)", "");
             List<string[]> table = CPULoad();
-            List<string> CPUS = new List<string>();
+            List<string> CPUS = new();
             string[] stringData = new string[5];
             foreach (string[] tableData in table)
             {
@@ -220,7 +220,7 @@ namespace PCInfoParser_Client_NET_Service
                     break;
                 }
             }
-            List<string> listData = new List<string>(stringData);
+            List<string> listData = new(stringData);
             foreach (string[] tableData in table)
             {
                 if (tableData[3] == stringData[3] && tableData[4] == stringData[4])
