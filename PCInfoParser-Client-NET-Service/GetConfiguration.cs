@@ -10,8 +10,8 @@ using System.Drawing.Printing;
 using System.IO;
 using System.Linq;
 using System.Management;
-using System.Net.NetworkInformation;
 using System.Net;
+using System.Net.NetworkInformation;
 using System.Reflection;
 namespace PCInfoParser_Client_NET_Service
 {
@@ -151,7 +151,7 @@ namespace PCInfoParser_Client_NET_Service
         }
         public static string[] CPU()
         {
-            string[] returnvalue = new string[2] {"",""};
+            string[] returnvalue = new string[2] { "", "" };
             hardwareInfo.RefreshCPUList();
             string cpu = hardwareInfo.CpuList[0].Name;
             returnvalue[0] = cpu.Trim();
@@ -297,7 +297,7 @@ namespace PCInfoParser_Client_NET_Service
                 }
             }
 
-            return String.Join(", ",lan.ToArray());
+            return String.Join(", ", lan.ToArray());
         }
 
     }
@@ -353,7 +353,7 @@ namespace PCInfoParser_Client_NET_Service
         public static string[,,] Disk()
         {
             string[,] DiskPreset = new string[7, 2] { { "Наименование", "" }, { "Прошивка", "" }, { "Размер", "" }, { "Время работы", "" }, { "Включён", "" }, { "Температура", "" }, { "Состояние", "" } };
-            string[,,] returnvalue = new string[4,7,2];
+            string[,,] returnvalue = new string[4, 7, 2];
             GetSmart smart = new GetSmart();
             List<string[]> smartData = smart.Get();
             for (int i = 0; i < 4; i++)
@@ -398,13 +398,13 @@ namespace PCInfoParser_Client_NET_Service
                             smart.Clear();
                         }
                     }
-                    foreach(string val in values) if (line.Contains(val) && line.Contains(" : ")) smart.Add(line.Split(':')[1].Trim());
+                    foreach (string val in values) if (line.Contains(val) && line.Contains(" : ")) smart.Add(line.Split(':')[1].Trim());
                 }
                 if (line.Contains("Disk List")) endlinecheck = true;
                 if (endlinecheck && line == "----------------------------------------------------------------------------") start = true;
             }
             if (smartparse.Count != 4) smartparse.Add(smart.ToArray());
-            while (smartparse.Count != 4) smartparse.Add(new string[7] { "","","","","","", "" });
+            while (smartparse.Count != 4) smartparse.Add(new string[7] { "", "", "", "", "", "", "" });
         }
         public List<string[]> Get()
         {

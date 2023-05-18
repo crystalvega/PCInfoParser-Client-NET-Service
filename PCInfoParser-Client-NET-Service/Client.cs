@@ -167,7 +167,7 @@ namespace PCInfoParser_Client_NET_Service
             {
                 this.ini = ini;
                 this.user = new string[4] { ini.GetValue("User", "ФИО"), ini.GetValue("User", "Кабинет"), ini.GetValue("User", "Организация"), ini.GetValue("User", "ID") };
-                this.server = new string[3] { ini.GetValue("Server", "IP") , ini.GetValue("Server", "Port") , ini.GetValue("Server", "Password") };
+                this.server = new string[3] { ini.GetValue("Server", "IP"), ini.GetValue("Server", "Port"), ini.GetValue("Server", "Password") };
                 this.general = general;
                 this.disk = disk;
                 this.lan = lan;
@@ -211,7 +211,7 @@ namespace PCInfoParser_Client_NET_Service
             catch (Exception) { return false; }
         }
 
-    public bool FirstMessage()
+        public bool FirstMessage()
         {
             try
             {
@@ -222,7 +222,7 @@ namespace PCInfoParser_Client_NET_Service
                 }
                 if (stream == null)
                     return false;
-                    
+
                 // Send a test message to the server
                 SendMessage(message, 10);
 
@@ -305,14 +305,15 @@ namespace PCInfoParser_Client_NET_Service
 
         public bool Disconnect()
         {
-            try {
+            try
+            {
                 stream?.Close();
                 client.Close();
                 this.status = false;
                 return true;
 
             }
-            catch(Exception)
+            catch (Exception)
             {
                 return true;
             }

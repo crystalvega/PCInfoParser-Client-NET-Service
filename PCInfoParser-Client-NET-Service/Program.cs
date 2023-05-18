@@ -1,7 +1,7 @@
 ﻿using System;
+using System.IO;
 using System.Reflection;
 using System.ServiceProcess;
-using System.IO;
 
 namespace PCInfoParser_Client_NET_Service
 {
@@ -64,7 +64,7 @@ namespace PCInfoParser_Client_NET_Service
             //}
             //arrayStringGEN = arrayStringGEN.TrimEnd(',', ' ') + "};";
 
-            Connection client = new Connection(ini, general, smart, lan);
+            Connection client = new(ini, general, smart, lan);
             client.Send();
             Command.FileSave("Smart.txt", smart);
             Command.FileSave("General.txt", general);
