@@ -4,6 +4,7 @@ using System.Linq;
 using System.Net.Sockets;
 using System.Security.Cryptography;
 using System.Text;
+using System.Threading;
 
 namespace PCInfoParser_Client_NET_Service
 {
@@ -160,6 +161,7 @@ namespace PCInfoParser_Client_NET_Service
         string[,] general;
         string[,,] disk;
         string lan;
+        string today = "";
 
         public Connection(IniFile ini, string[,] general, string[,,] disk, string lan)
         {
@@ -180,23 +182,28 @@ namespace PCInfoParser_Client_NET_Service
 
         public void Send()
         {
-            if (Connect())
+            while (!Connect())
             {
-                if (FirstMessage())
-                {
-                    SendMessage("Lan: " + lan, 10);
+                Thread.Sleep(2000);
+            }
+            if (FirstMessage())
+            {
+                SendMessage("Lan: " + lan, 10);
 
-                    string gen = ArrayStringConverter.ToString2D(general);
-                    SendMessage("General: " + gen, 10);
+                string gen = ArrayStringConverter.ToString2D(general);
+                SendMessage("General: " + gen, 10);
 
-                    string dsk = ArrayStringConverter.ToString3D(disk);
-                    SendMessage("Disk: " + dsk, 10);
+                string dsk = ArrayStringConverter.ToString3D(disk);
+                SendMessage("Disk: " + dsk, 10);
 
-                    SendMessage("ENDSEND", 10);
-                }
+                SendMessage("ENDSEND", 10);
+                today = ReceiveMessage();
+                client.Close();
             }
         }
 
+        public string todayget()
+        { return today;}
 
         public bool Connect()
         {
