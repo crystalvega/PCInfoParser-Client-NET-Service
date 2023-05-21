@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Reflection;
 using System.ServiceProcess;
@@ -118,23 +119,37 @@ namespace PCInfoParser_Client_NET_Service
         internal static void Start(string servicename)
         {
             if (!IsInstalled(servicename)) return;
-
-            using (ServiceController controller =
-                new ServiceController(servicename))
+            using ServiceController controller = new(servicename);
+            try
             {
-                try
+                if (controller.Status != ServiceControllerStatus.Running)
                 {
-                    if (controller.Status != ServiceControllerStatus.Running)
-                    {
-                        controller.Start();
-                        controller.WaitForStatus(ServiceControllerStatus.Running,
-                            TimeSpan.FromSeconds(10));
-                    }
+                    controller.Start();
+                    controller.WaitForStatus(ServiceControllerStatus.Running,
+                        TimeSpan.FromSeconds(10));
                 }
-                catch
+            }
+            catch
+            {
+                throw;
+            }
+        }
+        internal static void Stop(string servicename)
+        {
+            if (!IsInstalled(servicename)) return;
+            using ServiceController controller = new(servicename);
+            try
+            {
+                if (controller.Status != ServiceControllerStatus.Stopped)
                 {
-                    throw;
+                    controller.Stop();
+                    controller.WaitForStatus(ServiceControllerStatus.Stopped,
+                        TimeSpan.FromSeconds(10));
                 }
+            }
+            catch
+            {
+                throw;
             }
         }
     }

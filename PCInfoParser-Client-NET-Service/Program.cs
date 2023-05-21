@@ -4,6 +4,7 @@ using System.IO;
 using System.Reflection;
 using System.ServiceProcess;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace PCInfoParser_Client_NET_Service
 {
@@ -21,15 +22,17 @@ namespace PCInfoParser_Client_NET_Service
     }
 
 
+
     internal static class Program
     {
         /// <summary>
         /// Главная точка входа для приложения.
         /// </summary>
+        /// 
 
         static void Main(string[] args)
         {
-            if (Environment.UserInteractive)
+			if (Environment.UserInteractive)
             {
                 if (args != null && args.Length > 0)
                 {
@@ -40,7 +43,9 @@ namespace PCInfoParser_Client_NET_Service
                             {
                                 var appPath = Assembly.GetExecutingAssembly().Location;
                                 System.Configuration.Install.ManagedInstallerClass.InstallHelper(new string[] { appPath });
-                                Service.Start("PCInfoParcer");
+								if (File.Exists("PCInfoParser-Client.ini")) Service.Start("PCInfoParcer");
+								else Process.Start("PCInfoParser-Client-NET-Service-Configurator.exe");
+								
                             }
                             catch (Exception ex) { Console.WriteLine(ex.Message); }
                             break;

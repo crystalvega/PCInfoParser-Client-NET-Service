@@ -58,17 +58,21 @@ namespace PCInfoParser_Client_NET_Service
             byte[] edid_hex = OpenRegistryA(dir);
             string monitorname = "";
             string[] edid_result = new string[] { "Не найдено", "Не найдено" };
-            EDID edid = new EDID(edid_hex);
-            foreach (var desc in edid.Descriptors)
+            try
             {
-                if (desc.ToString().Contains("MonitorName"))
+                EDID edid = new EDID(edid_hex);
+                foreach (var desc in edid.Descriptors)
                 {
-                    monitorname = desc.ToString().Split(':')[1].TrimEnd(')');
-                    break;
+                    if (desc.ToString().Contains("MonitorName"))
+                    {
+                        monitorname = desc.ToString().Split(':')[1].TrimEnd(')');
+                        break;
+                    }
                 }
+                edid_result[0] = edid.ManufacturerCode + " " + monitorname;
+                edid_result[1] = edid.DisplayParameters.DisplaySizeInInch.ToString();
             }
-            edid_result[0] = edid.ManufacturerCode + " " + monitorname;
-            edid_result[1] = edid.DisplayParameters.DisplaySizeInInch.ToString();
+            catch (Exception) { }
             return edid_result;
         }
         public static string[] Printer()
@@ -369,46 +373,59 @@ namespace PCInfoParser_Client_NET_Service
             return returnvalue;
         }
     }
-    internal class GetSmart
-    {
-        List<string[]> smartparse = new List<string[]>();
-        internal GetSmart()
-        {
-            List<string> smart = new List<string>();
-            string directory = Path.Combine(Command.AssemblyDirectory(), "DiskInfo");
-            string exePath = Path.Combine(directory, "DiskInfo32.exe");
-            string arguments = "/copyexit";
-            string[] values = new string[7] { "Model", "Power On Hours", "Power On Count", "Firmware", "Disk Size", "Temperature", "Health Status" };
-            Process.Start(exePath, arguments).WaitForExit();
+	internal class GetSmart
+	{
+		readonly List<string[]> smartparse = new();
+		internal GetSmart()
+		{
+			string[] smart = new string[7] { "", "", "", "", "", "", "" };
+			string directory = Path.Combine(Command.AssemblyDirectory(), "DiskInfo");
+			string[] values = new string[7] { "Model", "Power On Hours", "Power On Count", "Firmware", "Disk Size", "Temperature", "Health Status" };
+			string exePath = Path.Combine(directory, "DiskInfo32.exe");
+			string arguments = "/copyexit";
+			Process.Start(exePath, arguments).WaitForExit();
 
-            string[] lines = File.ReadAllLines(Path.Combine(directory, "diskinfo.txt"));
-            bool start = false;
-            bool endlinecheck = false;
-            foreach (string line in lines)
-            {
-                if (smartparse.Count == 4) break;
-                if (start)
-                {
-                    if (line.StartsWith(" (0"))
-                    {
-                        if (endlinecheck) endlinecheck = false;
-                        else
-                        {
-                            smartparse.Add(smart.ToArray());
-                            smart.Clear();
-                        }
-                    }
-                    foreach (string val in values) if (line.Contains(val) && line.Contains(" : ")) smart.Add(line.Split(':')[1].Trim());
-                }
-                if (line.Contains("Disk List")) endlinecheck = true;
-                if (endlinecheck && line == "----------------------------------------------------------------------------") start = true;
-            }
-            if (smartparse.Count != 4) smartparse.Add(smart.ToArray());
-            while (smartparse.Count != 4) smartparse.Add(new string[7] { "", "", "", "", "", "", "" });
-        }
-        public List<string[]> Get()
-        {
-            return smartparse;
-        }
-    }
+			string[] lines = File.ReadAllLines(Path.Combine(directory, "diskinfo.txt"));
+			bool start = false;
+			bool endlinecheck = false;
+			foreach (string line in lines)
+			{
+				if (smartparse.Count == 4) break;
+				if (start)
+				{
+					if (line.StartsWith(" (0"))
+					{
+						if (endlinecheck) endlinecheck = false;
+						else
+						{
+							smartparse.Add(smart);
+							smart = new string[7] { "", "", "", "", "", "", "" };
+						}
+					}
+					for (int i = 0; i < 7; i++)
+					{
+						if (line.Contains(values[i]) && line.Contains(" : ")) smart[i] = line.Split(':')[1].Trim();
+					}
+				}
+				if (line.Contains("Disk List")) endlinecheck = true;
+				if (endlinecheck && line == "----------------------------------------------------------------------------") start = true;
+			}
+			if (IsContainedOnlyEmpty(smart)) smartparse.Add(new string[7] { "", "", "", "", "", "", "" });
+			else if (smartparse.Count != 4) smartparse.Add(smart);
+			while (smartparse.Count != 4) smartparse.Add(new string[7] { "", "", "", "", "", "", "" });
+		}
+		private bool IsContainedOnlyEmpty(string[] value)
+		{
+			bool contained = false;
+			foreach (string s in value)
+			{
+				if (s != "") contained = true;
+			}
+			return !contained;
+		}
+		public List<string[]> Get()
+		{
+			return smartparse;
+		}
+	}
 }
