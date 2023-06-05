@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Reflection;
 using System.ServiceProcess;
@@ -184,7 +183,7 @@ namespace PCInfoParser_Client_NET_Service
             // Закрываем файл
             writer.Close();
         }
-        public static void FileRemove(string filename) 
+        public static void FileRemove(string filename)
         {
             string Directory = Path.Combine(AssemblyDirectory(), filename);
             if (File.Exists(Directory))

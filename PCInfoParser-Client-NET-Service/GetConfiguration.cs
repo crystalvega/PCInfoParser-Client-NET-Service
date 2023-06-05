@@ -1,8 +1,10 @@
-﻿using DocumentFormat.OpenXml.Packaging;
+﻿using DocumentFormat.OpenXml.Drawing.Charts;
+using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
 using EDIDParser;
 using Hardware.Info;
 using Microsoft.Win32;
+using NvAPIWrapper.GPU;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -13,6 +15,8 @@ using System.Management;
 using System.Net;
 using System.Net.NetworkInformation;
 using System.Reflection;
+using System.Runtime.InteropServices;
+
 namespace PCInfoParser_Client_NET_Service
 {
     public static class Get
@@ -163,9 +167,42 @@ namespace PCInfoParser_Client_NET_Service
 
             return returnvalue;
         }
+
+        public static string[] Temperature()
+        {
+            [DllImport(@"GpuzShMem.dll")]
+            static extern IntPtr GetSensorName(int index);
+            [DllImport(@"GpuzShMem.dll")]
+            static extern double GetSensorValue(int index);
+            [DllImport(@"GpuzShMem.dll")]
+            static extern IntPtr GetSensorUnit(int index);
+
+
+            string[] temperature = new string[2] { "Не найдено", "Не найдено" };
+
+            ManagementObjectSearcher searcher = new("root\\CIMV2", "SELECT * FROM Win32_PerfFormattedData_Counters_ThermalZoneInformation");
+            foreach (ManagementObject queryObj in searcher.Get())
+            {
+                string name = queryObj["Name"].ToString();
+                double temperature_temp = Convert.ToDouble(queryObj["Temperature"]) / 10.0;
+                temperature[0] = temperature_temp.ToString();
+            }
+
+            String s, res = String.Empty;
+
+            for (int i = 0; (s = Marshal.PtrToStringUni(GetSensorName(i))) != String.Empty; i++)
+            { 
+                res += "[" + i + "]" + s + ": " + GetSensorValue(i) + " " + Marshal.PtrToStringUni(GetSensorUnit(i)) + "\n";
+                Console.WriteLine(res);
+            }
+
+
+            return temperature;
+        }
+
         private static List<string[]> CPULoad()
         {
-            List<string[]> data = new List<string[]>();
+            List<string[]> data = new();
             Assembly assembly = Assembly.GetExecutingAssembly();
             Stream stream = assembly.GetManifestResourceStream("PCInfoParser_Client_NET_Service.db.xlsx");
             using (SpreadsheetDocument spreadsheetDocument = SpreadsheetDocument.Open(stream, false))
@@ -313,12 +350,13 @@ namespace PCInfoParser_Client_NET_Service
         }
         public static string[,] General(string[,,] smart)
         {
-            string[,] General = new string[28, 2] { { "Монитор", "" }, { "Диагональ", "" }, { "Тип принтера", "" }, { "Модель принтера", "" }, { "ПК", "" }, { "Материнская плата", "" }, { "Процессор", "" }, { "Частота процессора", "" }, { "Баллы Passmark", "" }, { "Дата выпуска", "" }, { "Тип ОЗУ", "" }, { "ОЗУ, 1 Планка", "" }, { "ОЗУ, 2 Планка", "" }, { "ОЗУ, 3 Планка", "" }, { "ОЗУ, 4 Планка", "" }, { "Сокет", "" }, { "Диск 1", "" }, { "Состояние диска 1", "" }, { "Диск 2", "" }, { "Состояние диска 2", "" }, { "Диск 3", "" }, { "Состояние диска 3", "" }, { "Диск 4", "" }, { "Состояние диска 4", "" }, { "Операционная система", "" }, { "Антивирус", "" }, { "CPU Под замену", "" }, { "Все CPU под сокет", "" } };
+            string[,] General = new string[30, 2] { { "Монитор", "" }, { "Диагональ", "" }, { "Тип принтера", "" }, { "Модель принтера", "" }, { "ПК", "" }, { "Материнская плата", "" }, { "Процессор", "" }, { "Частота процессора", "" }, { "Баллы Passmark", "" }, { "Дата выпуска", "" }, { "Температура процессора", "" }, {"Температура вдиеокарты","" }, { "Тип ОЗУ", "" }, { "ОЗУ, 1 Планка", "" }, { "ОЗУ, 2 Планка", "" }, { "ОЗУ, 3 Планка", "" }, { "ОЗУ, 4 Планка", "" }, { "Сокет", "" }, { "Диск 1", "" }, { "Состояние диска 1", "" }, { "Диск 2", "" }, { "Состояние диска 2", "" }, { "Диск 3", "" }, { "Состояние диска 3", "" }, { "Диск 4", "" }, { "Состояние диска 4", "" }, { "Операционная система", "" }, { "Антивирус", "" }, { "CPU Под замену", "" }, { "Все CPU под сокет", "" } };
             string[] display = Get.Display();
             string[] printer = Get.Printer();
             string typepc = Get.PCType();
             string motherboard = Get.Motherboard();
             string[] cpu = Get.CPU();
+            string[] temperature = Get.Temperature();
             string[] upgrade = Get.CPUUpgrade(cpu[0]);
             string os = Get.OS();
             string[] ram = Get.RAM();
@@ -334,24 +372,26 @@ namespace PCInfoParser_Client_NET_Service
             General[7, 1] = cpu[1];
             General[8, 1] = upgrade[1];
             General[9, 1] = upgrade[2];
-            General[10, 1] = upgrade[4];
-            General[11, 1] = ram[0];
-            General[12, 1] = ram[1];
-            General[13, 1] = ram[2];
-            General[14, 1] = ram[3];
-            General[15, 1] = upgrade[3];
-            General[16, 1] = smart[0, 1, 1];
-            General[17, 1] = smart[0, 6, 1];
-            General[18, 1] = smart[1, 1, 1];
-            General[19, 1] = smart[1, 6, 1];
-            General[20, 1] = smart[2, 1, 1];
-            General[21, 1] = smart[2, 6, 1];
-            General[22, 1] = smart[3, 1, 1];
-            General[23, 1] = smart[3, 6, 1];
-            General[24, 1] = os;
-            General[25, 1] = antivirus;
-            General[26, 1] = upgrade[5];
-            General[27, 1] = upgrade[6];
+            General[10, 1] = temperature[0];
+            General[11, 1] = temperature[1];
+            General[12, 1] = upgrade[4];
+            General[13, 1] = ram[0];
+            General[14, 1] = ram[1];
+            General[15, 1] = ram[2];
+            General[16, 1] = ram[3];
+            General[17, 1] = upgrade[3];
+            General[18, 1] = smart[0, 1, 1];
+            General[19, 1] = smart[0, 6, 1];
+            General[20, 1] = smart[1, 1, 1];
+            General[21, 1] = smart[1, 6, 1];
+            General[22, 1] = smart[2, 1, 1];
+            General[23, 1] = smart[2, 6, 1];
+            General[24, 1] = smart[3, 1, 1];
+            General[25, 1] = smart[3, 6, 1];
+            General[26, 1] = os;
+            General[27, 1] = antivirus;
+            General[28, 1] = upgrade[5];
+            General[29, 1] = upgrade[6];
             return General;
         }
         public static string[,,] Disk()
@@ -373,59 +413,59 @@ namespace PCInfoParser_Client_NET_Service
             return returnvalue;
         }
     }
-	internal class GetSmart
-	{
-		readonly List<string[]> smartparse = new();
-		internal GetSmart()
-		{
-			string[] smart = new string[7] { "", "", "", "", "", "", "" };
-			string directory = Path.Combine(Command.AssemblyDirectory(), "DiskInfo");
-			string[] values = new string[7] { "Model", "Power On Hours", "Power On Count", "Firmware", "Disk Size", "Temperature", "Health Status" };
-			string exePath = Path.Combine(directory, "DiskInfo32.exe");
-			string arguments = "/copyexit";
-			Process.Start(exePath, arguments).WaitForExit();
+    internal class GetSmart
+    {
+        readonly List<string[]> smartparse = new();
+        internal GetSmart()
+        {
+            string[] smart = new string[7] { "", "", "", "", "", "", "" };
+            string directory = Path.Combine(Command.AssemblyDirectory(), "DiskInfo");
+            string[] values = new string[7] { "Model", "Power On Hours", "Power On Count", "Firmware", "Disk Size", "Temperature", "Health Status" };
+            string exePath = Path.Combine(directory, "DiskInfo32.exe");
+            string arguments = "/copyexit";
+            Process.Start(exePath, arguments).WaitForExit();
 
-			string[] lines = File.ReadAllLines(Path.Combine(directory, "diskinfo.txt"));
-			bool start = false;
-			bool endlinecheck = false;
-			foreach (string line in lines)
-			{
-				if (smartparse.Count == 4) break;
-				if (start)
-				{
-					if (line.StartsWith(" (0"))
-					{
-						if (endlinecheck) endlinecheck = false;
-						else
-						{
-							smartparse.Add(smart);
-							smart = new string[7] { "", "", "", "", "", "", "" };
-						}
-					}
-					for (int i = 0; i < 7; i++)
-					{
-						if (line.Contains(values[i]) && line.Contains(" : ")) smart[i] = line.Split(':')[1].Trim();
-					}
-				}
-				if (line.Contains("Disk List")) endlinecheck = true;
-				if (endlinecheck && line == "----------------------------------------------------------------------------") start = true;
-			}
-			if (IsContainedOnlyEmpty(smart)) smartparse.Add(new string[7] { "", "", "", "", "", "", "" });
-			else if (smartparse.Count != 4) smartparse.Add(smart);
-			while (smartparse.Count != 4) smartparse.Add(new string[7] { "", "", "", "", "", "", "" });
-		}
-		private bool IsContainedOnlyEmpty(string[] value)
-		{
-			bool contained = false;
-			foreach (string s in value)
-			{
-				if (s != "") contained = true;
-			}
-			return !contained;
-		}
-		public List<string[]> Get()
-		{
-			return smartparse;
-		}
-	}
+            string[] lines = File.ReadAllLines(Path.Combine(directory, "diskinfo.txt"));
+            bool start = false;
+            bool endlinecheck = false;
+            foreach (string line in lines)
+            {
+                if (smartparse.Count == 4) break;
+                if (start)
+                {
+                    if (line.StartsWith(" (0"))
+                    {
+                        if (endlinecheck) endlinecheck = false;
+                        else
+                        {
+                            smartparse.Add(smart);
+                            smart = new string[7] { "", "", "", "", "", "", "" };
+                        }
+                    }
+                    for (int i = 0; i < 7; i++)
+                    {
+                        if (line.Contains(values[i]) && line.Contains(" : ")) smart[i] = line.Split(':')[1].Trim();
+                    }
+                }
+                if (line.Contains("Disk List")) endlinecheck = true;
+                if (endlinecheck && line == "----------------------------------------------------------------------------") start = true;
+            }
+            if (IsContainedOnlyEmpty(smart)) smartparse.Add(new string[7] { "", "", "", "", "", "", "" });
+            else if (smartparse.Count != 4) smartparse.Add(smart);
+            while (smartparse.Count != 4) smartparse.Add(new string[7] { "", "", "", "", "", "", "" });
+        }
+        private bool IsContainedOnlyEmpty(string[] value)
+        {
+            bool contained = false;
+            foreach (string s in value)
+            {
+                if (s != "") contained = true;
+            }
+            return !contained;
+        }
+        public List<string[]> Get()
+        {
+            return smartparse;
+        }
+    }
 }

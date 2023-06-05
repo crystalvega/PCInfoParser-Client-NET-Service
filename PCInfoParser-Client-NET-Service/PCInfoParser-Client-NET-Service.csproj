@@ -164,10 +164,14 @@
     <PackageReference Include="Microsoft.Office.Interop.Excel">
       <Version>15.0.4795.1001</Version>
     </PackageReference>
+    <PackageReference Include="NvAPIWrapper.Net">
+      <Version>0.8.1.101</Version>
+    </PackageReference>
   </ItemGroup>
   <ItemGroup>
     <Content Include="client.ico" />
     <Content Include="FodyWeavers.xml" />
+    <Content Include="GpuzShMem.dll" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

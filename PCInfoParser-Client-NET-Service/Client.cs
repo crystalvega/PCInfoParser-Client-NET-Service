@@ -203,7 +203,7 @@ namespace PCInfoParser_Client_NET_Service
         }
 
         public string todayget()
-        { return today;}
+        { return today; }
 
         public bool Connect()
         {
