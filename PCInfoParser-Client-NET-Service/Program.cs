@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Reflection;
 using System.ServiceProcess;
+using System.Threading;
 
 namespace PCInfoParser_Client_NET_Service
 {
@@ -30,9 +31,47 @@ namespace PCInfoParser_Client_NET_Service
 
         static void Main(string[] args)
         {
-            string[,,] smart = GetConfiguration.Disk();
+            IniFile ini = new(Dir.Get("PCInfoParser-Client.ini"));
+            Configuration configuration = new();
+            Command.UnpackExe();
+            DateTime date1;
+            string[] lastSend;
+            bool firstsend = false;
+            string checkdays = ini.GetValue("App", "Autosend");
+            string lastSendDay = ini.GetValue("App", "LastSend");
+            if (lastSendDay == null)
+            {
+                lastSend = new string[3] { "11", "11", "1111" };
+                firstsend = true;
+            }
+            else lastSend = lastSendDay.Split('.');
+            date1 = new DateTime(Convert.ToInt32(lastSend[2]), Convert.ToInt32(lastSend[1]), Convert.ToInt32(lastSend[0]));
+            while (true)
+            {
+                DateTime date2 = DateTime.Today;
+                TimeSpan difference = date2.Subtract(date1);
 
-            string[,] general = GetConfiguration.General(smart);
+                if (difference.TotalDays > Convert.ToInt32(checkdays) || firstsend)
+                {
+                    configuration.Generate();
+                    string[,,] smart = configuration.SmartGet();
+                    string[,] general = configuration.GeneralGet();
+                    string lan = configuration.Lan();
+
+                    Connection client = new(ini, general, smart, lan);
+                    client.Send();
+                    string todaynew = client.TodayGet();
+                    lastSend = todaynew.Split('.');
+                    date1 = new DateTime(Convert.ToInt32(lastSend[2]), Convert.ToInt32(lastSend[1]), Convert.ToInt32(lastSend[0]));
+                    ini.SetValue("App", "LastSend", todaynew);
+                    ini.Save();
+                    Command.FileSave("Smart.txt", smart);
+                    Command.FileSave("General.txt", general);
+                }
+                Thread.Sleep(3600000);
+            }
+
+
             if (Environment.UserInteractive)
             {
                 if (args != null && args.Length > 0)

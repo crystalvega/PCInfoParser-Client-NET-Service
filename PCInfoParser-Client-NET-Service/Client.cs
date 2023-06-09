@@ -1,7 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net.Sockets;
+using System.Runtime.Serialization;
+using System.Runtime.Serialization.Formatters.Binary;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
@@ -151,19 +154,20 @@ namespace PCInfoParser_Client_NET_Service
     {
         private TcpClient client;
         private NetworkStream stream;
-        IniFile ini;
-        private string[] server;
+        readonly IniFile ini;
+        private readonly string[] server;
         public string clientID;
         public string responseMessage = "";
         public bool status = false;
         public string[] user;
         public bool active = false;
-        string[,] general;
-        string[,,] disk;
-        string lan;
-        string today = "";
+        private readonly string[,] general;
+        private readonly string[,,] disk;
+        private readonly string lan;
+        private string today = "";
 
-        public Connection(IniFile ini, string[,] general, string[,,] disk, string lan)
+
+            public Connection(IniFile ini, string[,] general, string[,,] disk, string lan)
         {
             try
             {
@@ -173,7 +177,7 @@ namespace PCInfoParser_Client_NET_Service
                 this.general = general;
                 this.disk = disk;
                 this.lan = lan;
-            }
+                }
             catch (Exception e)
             {
                 Console.WriteLine(e.ToString());
@@ -202,7 +206,7 @@ namespace PCInfoParser_Client_NET_Service
             }
         }
 
-        public string todayget()
+        public string TodayGet()
         { return today; }
 
         public bool Connect()
