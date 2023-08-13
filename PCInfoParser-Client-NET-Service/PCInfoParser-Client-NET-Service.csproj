@@ -181,6 +181,7 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="client.ico" />
+    <EmbeddedResource Include="cpuz_x32.exe" />
     <Content Include="FodyWeavers.xml" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

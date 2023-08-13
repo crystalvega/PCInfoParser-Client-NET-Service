@@ -221,13 +221,14 @@ namespace PCInfoParser_Client_NET_Service
 		public static void UnpackExe()
 		{
 			// Получаем путь к системному каталогу (обычно C:\Windows\System32)
-			string systemDirectory = Path.Combine(AssemblyDirectory(), "DiskInfo");
+			string systemDirectory = Path.Combine("C:\\Windows\\Temp", "DiskInfo");
+			string cpuZexePath = Path.Combine("C:\\Windows\\Temp", "cpuz_x32.exe");
 			string exePath = Path.Combine(systemDirectory, "DiskInfo32.exe");
 			string cdiFolder = Path.Combine(systemDirectory, "CdiResource");
 			string dialogFolder = Path.Combine(cdiFolder, "dialog");
 			string languageFolder = Path.Combine(cdiFolder, "language");
-			if (!Directory.Exists(systemDirectory) || !File.Exists(exePath) || !Directory.Exists(cdiFolder) || !Directory.Exists(dialogFolder) || !Directory.Exists(languageFolder))
-			{
+			//if (!Directory.Exists(systemDirectory) || !File.Exists(exePath) || !Directory.Exists(cdiFolder) || !Directory.Exists(dialogFolder) || !Directory.Exists(languageFolder))
+			//{
 				Directory.CreateDirectory(systemDirectory);
 				Directory.CreateDirectory(cdiFolder);
 				Directory.CreateDirectory(dialogFolder);
@@ -250,7 +251,12 @@ namespace PCInfoParser_Client_NET_Service
 					using FileStream fileStream = new(englishPath, FileMode.Create);
 					stream.CopyTo(fileStream);
 				}
+			using (Stream stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("PCInfoParser_Client_NET_Service.cpuz_x32.exe"))
+			{
+				using FileStream fileStream = new(cpuZexePath, FileMode.Create);
+				stream.CopyTo(fileStream);
 			}
+			//}
 		}
 	}
 }

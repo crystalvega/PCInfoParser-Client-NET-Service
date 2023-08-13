@@ -2,7 +2,6 @@
 using DocumentFormat.OpenXml.Spreadsheet;
 using EDIDParser;
 using Hardware.Info;
-using LibreHardwareMonitor.Hardware.Motherboard;
 using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
@@ -98,7 +97,7 @@ namespace PCInfoParser_Client_NET_Service
         }
         private void GeneralGenerateCPUZ()
         {
-            string directory = Path.Combine(Command.AssemblyDirectory(), "CPU-Z");
+            string directory = "C:\\Windows\\Temp";
             string exePath = Path.Combine(directory, "cpuz_x32.exe");
             string arguments = "-txt=report";
             Process.Start(exePath, arguments).WaitForExit();
@@ -109,35 +108,35 @@ namespace PCInfoParser_Client_NET_Service
 
 
 
-            general["Монитор"] = display[0];
-            general["Диагональ"] = display[1];
-            general["Тип принтера"] = printer[1];
-            general["Модель принтера"] = printer[0];
-            general["ПК"] = typepc;
-            general["Материнская плата"] = motherboard;
-            general["Процессор"] = upgrade[0];
-            general["Частота процессора"] = cpu[1];
-            general["Баллы Passmark"] = upgrade[1];
-            general["Дата выпуска"] = upgrade[2];
-            general["Температура процессора"] = temperature;
-            general["Тип ОЗУ"] = upgrade[4];
-            general["ОЗУ, 1 Планка"] = ram[0];
-            general["ОЗУ, 2 Планка"] = ram[1];
-            general["ОЗУ, 3 Планка"] = ram[2];
-            general["ОЗУ, 4 Планка"] = ram[3];
-            general["Сокет"] = upgrade[3];
-            general["Диск 1"] = smart[0].TryGetValue("Наименование", out string result) ? result : "";
-            general["Состояние диска 1"] = smart[0].TryGetValue("Состояние", out result) ? result : "";
-            general["Диск 2"] = smart[1].TryGetValue("Наименование", out result) ? result : "";
-            general["Состояние диска 2"] = smart[1].TryGetValue("Состояние", out result) ? result : "";
-            general["Диск 3"] = smart[2].TryGetValue("Наименование", out result) ? result : "";
-            general["Состояние диска 3"] = smart[2].TryGetValue("Состояние", out result) ? result : "";
-            general["Диск 4"] = smart[3].TryGetValue("Наименование", out result) ? result : "";
-            general["Состояние диска 4"] = smart[3].TryGetValue("Состояние", out result) ? result : "";
-            general["Операционная система"] = os;
-            general["Антивирус"] = antivirus;
-            general["CPU Под замену"] = upgrade[5];
-            general["Все CPU под сокет"] = upgrade[6];
+            //general["Монитор"] = display[0];
+            //general["Диагональ"] = display[1];
+            //general["Тип принтера"] = printer[1];
+            //general["Модель принтера"] = printer[0];
+            //general["ПК"] = typepc;
+            //general["Материнская плата"] = motherboard;
+            //general["Процессор"] = upgrade[0];
+            //general["Частота процессора"] = cpu[1];
+            //general["Баллы Passmark"] = upgrade[1];
+            //general["Дата выпуска"] = upgrade[2];
+            //general["Температура процессора"] = temperature;
+            //general["Тип ОЗУ"] = upgrade[4];
+            //general["ОЗУ, 1 Планка"] = ram[0];
+            //general["ОЗУ, 2 Планка"] = ram[1];
+            //general["ОЗУ, 3 Планка"] = ram[2];
+            //general["ОЗУ, 4 Планка"] = ram[3];
+            //general["Сокет"] = upgrade[3];
+            //general["Диск 1"] = smart[0].TryGetValue("Наименование", out string result) ? result : "";
+            //general["Состояние диска 1"] = smart[0].TryGetValue("Состояние", out result) ? result : "";
+            //general["Диск 2"] = smart[1].TryGetValue("Наименование", out result) ? result : "";
+            //general["Состояние диска 2"] = smart[1].TryGetValue("Состояние", out result) ? result : "";
+            //general["Диск 3"] = smart[2].TryGetValue("Наименование", out result) ? result : "";
+            //general["Состояние диска 3"] = smart[2].TryGetValue("Состояние", out result) ? result : "";
+            //general["Диск 4"] = smart[3].TryGetValue("Наименование", out result) ? result : "";
+            //general["Состояние диска 4"] = smart[3].TryGetValue("Состояние", out result) ? result : "";
+            //general["Операционная система"] = os;
+            //general["Антивирус"] = antivirus;
+            //general["CPU Под замену"] = upgrade[5];
+            //general["Все CPU под сокет"] = upgrade[6];
         }
         private void GeneralGenerate()
         {
