@@ -58,13 +58,20 @@
     <ManifestKeyFile>PCInfoParser-Client-NET-Service_TemporaryKey.pfx</ManifestKeyFile>
   </PropertyGroup>
   <PropertyGroup>
-    <GenerateManifests>true</GenerateManifests>
+    <GenerateManifests>false</GenerateManifests>
   </PropertyGroup>
   <PropertyGroup>
-    <SignManifests>true</SignManifests>
+    <SignManifests>false</SignManifests>
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationIcon>client.ico</ApplicationIcon>
+  </PropertyGroup>
+  <PropertyGroup>
+    <TargetZone>LocalIntranet</TargetZone>
+  </PropertyGroup>
+  <PropertyGroup />
+  <PropertyGroup>
+    <ApplicationManifest>app2.manifest</ApplicationManifest>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="PresentationCore" />
@@ -118,7 +125,8 @@
       <CustomToolNamespace>costura</CustomToolNamespace>
     </EmbeddedResource>
     <EmbeddedResource Include="CdiResource\language\English.lang" />
-    <None Include="PCInfoParser-Client-NET-Service_TemporaryKey.pfx" />
+    <None Include="app2.manifest" />
+    <None Include="Properties\app.manifest" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="DiskInfo32.exe" />
@@ -151,12 +159,12 @@
       <Version>1.2.5.4</Version>
     </PackageReference>
     <PackageReference Include="Fody">
-      <Version>6.7.0</Version>
+      <Version>6.8.0</Version>
       <IncludeAssets>runtime; compile; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
     <PackageReference Include="Hardware.Info">
-      <Version>11.1.0</Version>
+      <Version>11.1.0.1</Version>
     </PackageReference>
     <PackageReference Include="LibreHardwareMonitorLib">
       <Version>0.9.2</Version>
@@ -166,6 +174,9 @@
     </PackageReference>
     <PackageReference Include="Microsoft.Office.Interop.Excel">
       <Version>15.0.4795.1001</Version>
+    </PackageReference>
+    <PackageReference Include="Topshelf">
+      <Version>4.3.0</Version>
     </PackageReference>
   </ItemGroup>
   <ItemGroup>

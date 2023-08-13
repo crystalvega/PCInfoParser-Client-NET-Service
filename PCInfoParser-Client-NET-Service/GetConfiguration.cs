@@ -2,6 +2,7 @@
 using DocumentFormat.OpenXml.Spreadsheet;
 using EDIDParser;
 using Hardware.Info;
+using LibreHardwareMonitor.Hardware.Motherboard;
 using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
@@ -13,6 +14,7 @@ using System.Management;
 using System.Net;
 using System.Net.NetworkInformation;
 using System.Reflection;
+using System.Text.RegularExpressions;
 
 namespace PCInfoParser_Client_NET_Service
 {
@@ -21,11 +23,6 @@ namespace PCInfoParser_Client_NET_Service
     {
         private IDictionary<string, string> general = new Dictionary<string, string>();
         private IDictionary<string, string>[] smart = new Dictionary<string, string>[4];
-
-        public Configuration() 
-        {
-            Generate();
-        }
 
         public string[,] GeneralGet()
         {
@@ -85,15 +82,62 @@ namespace PCInfoParser_Client_NET_Service
             return array3D;
         }
 
-        public void Generate()
+        public void Generate(bool cpuz)
         {
             SmartGenerate();
-            GeneralGenerate();
+            if (cpuz)
+                GeneralGenerateCPUZ();
+            else
+                GeneralGenerate();
+
         }
 
         public string Lan()
         {
             return Get.Lan();
+        }
+        private void GeneralGenerateCPUZ()
+        {
+            string directory = Path.Combine(Command.AssemblyDirectory(), "CPU-Z");
+            string exePath = Path.Combine(directory, "cpuz_x32.exe");
+            string arguments = "-txt=report";
+            Process.Start(exePath, arguments).WaitForExit();
+
+            string[] lines = File.ReadAllLines(Path.Combine(directory, "report.txt"));
+
+            string[] ll = new string[] { "Monitor 0", "Windows Version", "DMI Baseboard", "Socket 1" };
+
+
+
+            general["Монитор"] = display[0];
+            general["Диагональ"] = display[1];
+            general["Тип принтера"] = printer[1];
+            general["Модель принтера"] = printer[0];
+            general["ПК"] = typepc;
+            general["Материнская плата"] = motherboard;
+            general["Процессор"] = upgrade[0];
+            general["Частота процессора"] = cpu[1];
+            general["Баллы Passmark"] = upgrade[1];
+            general["Дата выпуска"] = upgrade[2];
+            general["Температура процессора"] = temperature;
+            general["Тип ОЗУ"] = upgrade[4];
+            general["ОЗУ, 1 Планка"] = ram[0];
+            general["ОЗУ, 2 Планка"] = ram[1];
+            general["ОЗУ, 3 Планка"] = ram[2];
+            general["ОЗУ, 4 Планка"] = ram[3];
+            general["Сокет"] = upgrade[3];
+            general["Диск 1"] = smart[0].TryGetValue("Наименование", out string result) ? result : "";
+            general["Состояние диска 1"] = smart[0].TryGetValue("Состояние", out result) ? result : "";
+            general["Диск 2"] = smart[1].TryGetValue("Наименование", out result) ? result : "";
+            general["Состояние диска 2"] = smart[1].TryGetValue("Состояние", out result) ? result : "";
+            general["Диск 3"] = smart[2].TryGetValue("Наименование", out result) ? result : "";
+            general["Состояние диска 3"] = smart[2].TryGetValue("Состояние", out result) ? result : "";
+            general["Диск 4"] = smart[3].TryGetValue("Наименование", out result) ? result : "";
+            general["Состояние диска 4"] = smart[3].TryGetValue("Состояние", out result) ? result : "";
+            general["Операционная система"] = os;
+            general["Антивирус"] = antivirus;
+            general["CPU Под замену"] = upgrade[5];
+            general["Все CPU под сокет"] = upgrade[6];
         }
         private void GeneralGenerate()
         {
@@ -121,7 +165,7 @@ namespace PCInfoParser_Client_NET_Service
             general["Температура процессора"] = temperature;
             general["Тип ОЗУ"] = upgrade[4];
             general["ОЗУ, 1 Планка"] = ram[0];
-            general[ "ОЗУ, 2 Планка"] = ram[1];
+            general["ОЗУ, 2 Планка"] = ram[1];
             general["ОЗУ, 3 Планка"] = ram[2];
             general["ОЗУ, 4 Планка"] = ram[3];
             general["Сокет"] = upgrade[3];
@@ -135,7 +179,7 @@ namespace PCInfoParser_Client_NET_Service
             general["Состояние диска 4"] = smart[3].TryGetValue("Состояние", out result) ? result : "";
             general["Операционная система"] = os;
             general["Антивирус"] = antivirus;
-            general[ "CPU Под замену"] = upgrade[5];
+            general["CPU Под замену"] = upgrade[5];
             general["Все CPU под сокет"] = upgrade[6];
         }
         private void SmartGenerate()
@@ -150,7 +194,7 @@ namespace PCInfoParser_Client_NET_Service
             for (int i = 0; i < 4; i++)
                 smart[i] = new Dictionary<string, string>();
 
-            
+
             string[] lines = File.ReadAllLines(Path.Combine(directory, "diskinfo.txt"));
             int i3 = 0;
             for (int i = 0; i < lines.Length; i++)
@@ -197,18 +241,22 @@ namespace PCInfoParser_Client_NET_Service
             private static string Directory()
             {
                 string pnpDeviceId = "";
-                ManagementObjectSearcher searcher = new ManagementObjectSearcher("SELECT PNPDeviceID FROM Win32_DesktopMonitor");
-                ManagementObjectCollection monitors = searcher.Get();
-                ManagementObject firstMonitor = null;
-                foreach (ManagementObject monitor in monitors)
+                try
                 {
-                    firstMonitor = monitor;
-                    break;
+                    ManagementObjectSearcher searcher = new("SELECT PNPDeviceID FROM Win32_DesktopMonitor");
+                    ManagementObjectCollection monitors = searcher.Get();
+                    ManagementObject firstMonitor = null;
+                    foreach (ManagementObject monitor in monitors.Cast<ManagementObject>())
+                    {
+                        firstMonitor = monitor;
+                        break;
+                    }
+                    if (firstMonitor != null)
+                    {
+                        pnpDeviceId = (string)firstMonitor["PNPDeviceID"];
+                    }
                 }
-                if (firstMonitor != null)
-                {
-                    pnpDeviceId = (string)firstMonitor["PNPDeviceID"];
-                }
+                catch { }
                 return pnpDeviceId;
             }
             public static string[] Display()
@@ -219,7 +267,7 @@ namespace PCInfoParser_Client_NET_Service
                 string[] edid_result = new string[] { "Не найдено", "Не найдено" };
                 try
                 {
-                    EDID edid = new EDID(edid_hex);
+                    EDID edid = new(edid_hex);
                     foreach (var desc in edid.Descriptors)
                     {
                         if (desc.ToString().Contains("MonitorName"))
@@ -236,105 +284,128 @@ namespace PCInfoParser_Client_NET_Service
             }
             public static string[] Printer()
             {
-                PrinterSettings settings = new PrinterSettings();
-                string printerName = settings.PrinterName;
-                string query = string.Format("SELECT * from Win32_Printer WHERE Name LIKE '%{0}'", printerName);
-                ManagementObjectSearcher searcher = new ManagementObjectSearcher(query);
-                string[] returnvalue = new string[2] { printerName, "" };
-
-                foreach (ManagementObject printer in searcher.Get())
+                try
                 {
-                    UInt16 capability = 0;
-                    UInt16[] capabilities = (UInt16[])printer["Capabilities"];
-                    if (capabilities.Length > 0)
-                    {
-                        capability = capabilities[0];
-                        // теперь вы можете использовать значение "capability" вместо "capabilities" в вашем коде
-                    }
+                    PrinterSettings settings = new();
+                    string printerName = settings.PrinterName;
+                    string query = string.Format("SELECT * from Win32_Printer WHERE Name LIKE '%{0}'", printerName);
+                    ManagementObjectSearcher searcher = new(query);
+                    string[] returnvalue = new string[2] { printerName, "" };
 
-                    if ((capability & 4) != 0) // PRINTER_CAPABILITY_COPIER
+                    foreach (ManagementObject printer in searcher.Get().Cast<ManagementObject>())
                     {
-                        returnvalue[1] = "Копир";
+                        UInt16 capability = 0;
+                        UInt16[] capabilities = (UInt16[])printer["Capabilities"];
+                        if (capabilities.Length > 0)
+                        {
+                            capability = capabilities[0];
+                            // теперь вы можете использовать значение "capability" вместо "capabilities" в вашем коде
+                        }
+
+                        if ((capability & 4) != 0) // PRINTER_CAPABILITY_COPIER
+                        {
+                            returnvalue[1] = "Копир";
+                        }
+                        else if ((capability & 8) != 0) // PRINTER_CAPABILITY_FAX
+                        {
+                            returnvalue[1] = "Факс";
+                        }
+                        else if ((capability & 256) != 0) // PRINTER_CAPABILITY_MULTI_FUNCTION
+                        {
+                            returnvalue[1] = "МФУ";
+                        }
+                        else if ((capability & 2) != 0) // PRINTER_CAPABILITY_PRINTER
+                        {
+                            returnvalue[1] = "Принтер";
+                        }
+                        else // PRINTER_CAPABILITY_UNKNOWN
+                        {
+                            returnvalue[1] = "Неизвестен";
+                        }
                     }
-                    else if ((capability & 8) != 0) // PRINTER_CAPABILITY_FAX
-                    {
-                        returnvalue[1] = "Факс";
-                    }
-                    else if ((capability & 256) != 0) // PRINTER_CAPABILITY_MULTI_FUNCTION
-                    {
-                        returnvalue[1] = "МФУ";
-                    }
-                    else if ((capability & 2) != 0) // PRINTER_CAPABILITY_PRINTER
-                    {
-                        returnvalue[1] = "Принтер";
-                    }
-                    else // PRINTER_CAPABILITY_UNKNOWN
-                    {
-                        returnvalue[1] = "Неизвестен";
-                    }
+                    return returnvalue;
                 }
-                return returnvalue;
+                catch (Exception)
+                {
+                    return new string[2] { "Не найдено", "Не найдено" };
+                }
+
             }
             public static string PCType()
             {
-                string returnvalue = "";
-                RegistryKey key = Registry.LocalMachine.OpenSubKey(@"SYSTEM\CurrentControlSet\Control\SystemInformation");
-
-                if (key != null)
+                string returnvalue = "Не найдено";
+                try
                 {
-                    string value = key.GetValue("ValueName")?.ToString() ?? "";
 
-                    if (value.Contains("Laptop") || value.Contains("Notebook"))
+
+                    RegistryKey key = Registry.LocalMachine.OpenSubKey(@"SYSTEM\CurrentControlSet\Control\SystemInformation");
+
+                    if (key != null)
                     {
-                        returnvalue = "Ноутбук";
-                    }
-                    else if (value.Contains("All-in-One"))
-                    {
-                        returnvalue = "Моноблок";
+                        string value = key.GetValue("ValueName")?.ToString() ?? "";
+
+                        if (value.Contains("Laptop") || value.Contains("Notebook"))
+                        {
+                            returnvalue = "Ноутбук";
+                        }
+                        else if (value.Contains("All-in-One"))
+                        {
+                            returnvalue = "Моноблок";
+                        }
+                        else
+                        {
+                            returnvalue = "ПК";
+                        }
                     }
                     else
                     {
-                        returnvalue = "ПК";
+                        returnvalue = "Не найдено";
                     }
                 }
-                else
-                {
-                    Console.WriteLine("Не удалось определить");
-                }
+                catch { }
                 return returnvalue;
             }
             public static string Motherboard()
             {
-                hardwareInfo.RefreshMotherboardList();
-                foreach (var motherboard in hardwareInfo.MotherboardList)
+                try
                 {
-                    return motherboard.Manufacturer + " " + motherboard.Product;
+                    hardwareInfo.RefreshMotherboardList();
+                    foreach (var motherboard in hardwareInfo.MotherboardList)
+                    {
+                        return motherboard.Manufacturer + " " + motherboard.Product;
+                    }
                 }
+                catch { }
                 return null;
             }
             public static string[] CPU()
             {
                 string[] returnvalue = new string[2] { "", "" };
-                hardwareInfo.RefreshCPUList();
-                string cpu = hardwareInfo.CpuList[0].Name;
-                returnvalue[0] = cpu.Trim();
-                returnvalue[1] = hardwareInfo.CpuList[0].MaxClockSpeed.ToString();
-
+                try
+                {
+                    hardwareInfo.RefreshCPUList();
+                    string cpu = hardwareInfo.CpuList[0].Name;
+                    returnvalue[0] = cpu.Trim();
+                    returnvalue[1] = hardwareInfo.CpuList[0].MaxClockSpeed.ToString();
+                }
+                catch { }
                 return returnvalue;
             }
 
             public static string CPUTemperature()
             {
                 string temperature = "Не найдено";
-
-                ManagementObjectSearcher searcher = new("root\\CIMV2", "SELECT * FROM Win32_PerfFormattedData_Counters_ThermalZoneInformation");
-                foreach (ManagementObject queryObj in searcher.Get())
+                try
                 {
-                    string name = queryObj["Name"].ToString();
-                    double temperature_temp = Convert.ToDouble(queryObj["Temperature"]) / 10.0;
-                    temperature = temperature_temp.ToString();
+                    ManagementObjectSearcher searcher = new("root\\CIMV2", "SELECT * FROM Win32_PerfFormattedData_Counters_ThermalZoneInformation");
+                    foreach (ManagementObject queryObj in searcher.Get())
+                    {
+                        string name = queryObj["Name"].ToString();
+                        double temperature_temp = Convert.ToDouble(queryObj["Temperature"]) / 10.0;
+                        temperature = temperature_temp.ToString();
+                    }
                 }
-
+                catch { }
                 return temperature;
             }
 
@@ -342,7 +413,7 @@ namespace PCInfoParser_Client_NET_Service
             {
                 List<string[]> data = new();
                 Assembly assembly = Assembly.GetExecutingAssembly();
-                Stream stream = assembly.GetManifestResourceStream("PCInfoParser_Client_NET_Service.db.xlsx");
+                Stream stream = assembly.GetManifestResourceStream("PCInfoParser_ToExcel.db.xlsx");
                 using (SpreadsheetDocument spreadsheetDocument = SpreadsheetDocument.Open(stream, false))
                 {
                     WorkbookPart workbookPart = spreadsheetDocument.WorkbookPart;
@@ -356,7 +427,7 @@ namespace PCInfoParser_Client_NET_Service
 
                         foreach (Row row in rows)
                         {
-                            List<string> rowData = new List<string>();
+                            List<string> rowData = new();
 
                             foreach (Cell cell in row.Descendants<Cell>())
                             {
@@ -385,69 +456,93 @@ namespace PCInfoParser_Client_NET_Service
             }
             public static string[] CPUUpgrade(string cpu)
             {
-                if (cpu.Contains("(R)")) cpu = cpu.Replace("(R)", "");
-                if (cpu.Contains("(C)")) cpu = cpu.Replace("(C)", "");
-                if (cpu.Contains("(TM)")) cpu = cpu.Replace("(TM)", "");
-                List<string[]> table = CPULoad();
-                List<string> CPUS = new();
-                string[] stringData = new string[5];
-                foreach (string[] tableData in table)
+                try
                 {
-                    if (cpu.Contains(tableData[0]))
+                    string pattern = @"@\s*\d+(\.\d+)?\s*GHz";
+                    string[] cpuWordsDelete = new string[] { "(R)", "(C)", "(TM)", " CPU" };
+
+                    foreach (string word in cpuWordsDelete)
                     {
-                        stringData = tableData;
-                        break;
+                        if (cpu.Contains(word)) cpu = cpu.Replace(word, "");
                     }
+
+                    if (cpu.Contains(" @") && cpu.Contains("GHz")) cpu = Regex.Replace(cpu, pattern, string.Empty);
+                    List<string[]> table = CPULoad();
+                    List<string> CPUS = new();
+                    string[] stringData = new string[5];
+                    foreach (string[] tableData in table)
+                    {
+                        if (cpu.Contains(tableData[0]))
+                        {
+                            stringData = tableData;
+                            break;
+                        }
+                    }
+                    List<string> listData = new(stringData);
+                    foreach (string[] tableData in table)
+                    {
+                        if (tableData[3] == stringData[3] && tableData[4] == stringData[4])
+                        {
+                            CPUS.Add(tableData[0]);
+                        }
+                    }
+                    listData.Add(CPUS[0]);
+                    listData.Add(string.Join(", ", CPUS));
+                    return listData.ToArray();
                 }
-                List<string> listData = new(stringData);
-                foreach (string[] tableData in table)
+                catch
                 {
-                    if (tableData[3] == stringData[3] && tableData[4] == stringData[4])
-                    {
-                        CPUS.Add(tableData[0]);
-                    }
+                    return new string[] { "Не найдено", "Не найдено", "Не найдено", "Не найдено", "Не найдено", "Не найдено", "Не найдено" };
                 }
-                listData.Add(CPUS[0]);
-                listData.Add(string.Join(", ", CPUS));
-                return listData.ToArray();
             }
             public static string[] RAM()
             {
-                List<string> returnvalue = new List<string>();
-                hardwareInfo.RefreshMemoryList();
-                int i = 0;
-                foreach (Memory memory in hardwareInfo.MemoryList)
+                try
                 {
-                    ulong value = memory.Capacity / 1073741824;
-                    returnvalue.Add(value.ToString() + " ГБ");
-                    i++;
-                }
+                    List<string> returnvalue = new();
+                    hardwareInfo.RefreshMemoryList();
+                    int i = 0;
+                    foreach (Memory memory in hardwareInfo.MemoryList)
+                    {
+                        ulong value = memory.Capacity / 1073741824;
+                        returnvalue.Add(value.ToString() + " ГБ");
+                        i++;
+                    }
 
-                while (i < 4)
-                {
-                    returnvalue.Add("");
-                    i++;
+                    while (i < 4)
+                    {
+                        returnvalue.Add("");
+                        i++;
+                    }
+                    return returnvalue.ToArray();
                 }
-                return returnvalue.ToArray();
+                catch { return new string[4] { "Не найдено", "Не найдено", "Не найдено", "Не найдено" }; }
             }
             public static string Antivirus()
             {
                 string antivirusName = "";
-
-                ManagementObjectSearcher searcher = new ManagementObjectSearcher("root\\SecurityCenter2", "SELECT * FROM AntiVirusProduct");
-
-                foreach (ManagementObject queryObj in searcher.Get())
+                try
                 {
-                    antivirusName = queryObj["displayName"].ToString();
-                    break;
+                    ManagementObjectSearcher searcher = new("root\\SecurityCenter2", "SELECT * FROM AntiVirusProduct");
+
+                    foreach (ManagementObject queryObj in searcher.Get().Cast<ManagementObject>())
+                    {
+                        antivirusName = queryObj["displayName"].ToString();
+                        break;
+                    }
                 }
+                catch (Exception) { }
 
                 return antivirusName;
             }
             public static string OS()
             {
-                hardwareInfo.RefreshOperatingSystem();
-                return hardwareInfo.OperatingSystem.Name;
+                try
+                {
+                    hardwareInfo.RefreshOperatingSystem();
+                    return hardwareInfo.OperatingSystem.Name;
+                }
+                catch (Exception) { return "Не найдено"; }
             }
 
             public static string Lan()
@@ -478,7 +573,6 @@ namespace PCInfoParser_Client_NET_Service
 
                 return String.Join(", ", lan.ToArray());
             }
-
         }
     }
 }

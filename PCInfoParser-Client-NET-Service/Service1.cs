@@ -25,8 +25,8 @@ namespace PCInfoParser_Client_NET_Service
 		private void Processing()
 		{
             IniFile ini = new(Dir.Get("PCInfoParser-Client.ini"));
-            Configuration configuration = new();
             Command.UnpackExe();
+            Configuration configuration = new();
             DateTime date1;
             string[] lastSend;
             bool firstsend = false;
