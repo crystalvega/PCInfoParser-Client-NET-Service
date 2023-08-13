@@ -171,7 +171,6 @@
   <ItemGroup>
     <Content Include="client.ico" />
     <Content Include="FodyWeavers.xml" />
-    <Content Include="GpuzShMem.dll" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

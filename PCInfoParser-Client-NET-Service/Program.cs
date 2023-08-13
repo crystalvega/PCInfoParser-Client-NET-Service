@@ -30,7 +30,8 @@ namespace PCInfoParser_Client_NET_Service
 
         static void Main(string[] args)
         {
-            string[,,] smart = GetConfiguration.Disk();
+			Command.UnpackExe();
+			string[,,] smart = GetConfiguration.Disk();
 
             string[,] general = GetConfiguration.General(smart);
             if (Environment.UserInteractive)
