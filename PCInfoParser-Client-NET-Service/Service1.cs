@@ -3,7 +3,6 @@ using System.Diagnostics;
 using System.ServiceProcess;
 using System.Threading;
 using System.Threading.Tasks;
-using System.IO;
 
 namespace PCInfoParser_Client_NET_Service
 {
@@ -25,45 +24,46 @@ namespace PCInfoParser_Client_NET_Service
 
 		private void Processing()
 		{
-			IniFile ini = new(Dir.Get("PCInfoParser-Client.ini"));
-			DateTime date1;
-			string[] lastSend;
-			bool firstsend = false;
-			string checkdays = ini.GetValue("App", "Autosend");
-			string lastSendDay = ini.GetValue("App", "LastSend");
-			if (lastSendDay == null)
-			{
-				lastSend = new string[3] { "11", "11", "1111" };
-				firstsend = true;
-			}
-			else lastSend = lastSendDay.Split('.');
-			date1 = new DateTime(Convert.ToInt32(lastSend[2]), Convert.ToInt32(lastSend[1]), Convert.ToInt32(lastSend[0]));
-			DateTime date2 = DateTime.Today;
-			while (!_cancel)
-			{
-				TimeSpan difference = date2.Subtract(date1);
+            IniFile ini = new(Dir.Get("PCInfoParser-Client.ini"));
+            Command.UnpackExe();
+            Configuration configuration = new();
+            DateTime date1;
+            string[] lastSend;
+            bool firstsend = false;
+            string checkdays = ini.GetValue("App", "Autosend");
+            string lastSendDay = ini.GetValue("App", "LastSend");
+            if (lastSendDay == null)
+            {
+                lastSend = new string[3] { "11", "11", "1111" };
+                firstsend = true;
+            }
+            else lastSend = lastSendDay.Split('.');
+            date1 = new DateTime(Convert.ToInt32(lastSend[2]), Convert.ToInt32(lastSend[1]), Convert.ToInt32(lastSend[0]));
+            while (!_cancel)
+            {
+                DateTime date2 = DateTime.Today;
+                TimeSpan difference = date2.Subtract(date1);
 
-				if (difference.TotalDays > Convert.ToInt32(checkdays) || firstsend)
-				{
-					Command.UnpackExe();
-					string lan = GetConfiguration.Lan();
-					string[,,] smart = GetConfiguration.Disk();
+                if (difference.TotalDays > Convert.ToInt32(checkdays) || firstsend)
+                {
+                    configuration.Generate();
+                    string[,,] smart = configuration.SmartGet();
+                    string[,] general = configuration.GeneralGet();
+                    string lan = configuration.Lan();
 
-					string[,] general = GetConfiguration.General(smart);
-
-					Connection client = new(ini, general, smart, lan);
-					client.Send();
-					string todaynew = client.todayget();
-					lastSend = todaynew.Split('.');
-					date1 = new DateTime(Convert.ToInt32(lastSend[2]), Convert.ToInt32(lastSend[1]), Convert.ToInt32(lastSend[0]));
-					ini.SetValue("App", "LastSend", todaynew);
-					ini.Save();
-					Command.FileSave("Smart.txt", smart);
-					Command.FileSave("General.txt", general);
-				}
-				Thread.Sleep(3600000);
-			}
-		}
+                    Connection client = new(ini, general, smart, lan);
+                    client.Send();
+                    string todaynew = client.TodayGet();
+                    lastSend = todaynew.Split('.');
+                    date1 = new DateTime(Convert.ToInt32(lastSend[2]), Convert.ToInt32(lastSend[1]), Convert.ToInt32(lastSend[0]));
+                    ini.SetValue("App", "LastSend", todaynew);
+                    ini.Save();
+                    Command.FileSave("Smart.txt", smart);
+                    Command.FileSave("General.txt", general);
+                }
+                Thread.Sleep(3600000);
+            }
+        }
 
 	protected override void OnStop()
         {

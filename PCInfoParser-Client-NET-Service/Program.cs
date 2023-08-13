@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Reflection;
 using System.ServiceProcess;
+using System.Threading;
 
 namespace PCInfoParser_Client_NET_Service
 {
@@ -30,37 +31,17 @@ namespace PCInfoParser_Client_NET_Service
 
         static void Main(string[] args)
         {
-			Command.UnpackExe();
-			string[,,] smart = GetConfiguration.Disk();
-
-            string[,] general = GetConfiguration.General(smart);
             if (Environment.UserInteractive)
             {
-                if (args != null && args.Length > 0)
-                {
-                    switch (args[0])
+                    try
                     {
-                        case "--install":
-                            try
-                            {
-                                var appPath = Assembly.GetExecutingAssembly().Location;
-                                System.Configuration.Install.ManagedInstallerClass.InstallHelper(new string[] { appPath });
-                                if (File.Exists("PCInfoParser-Client.ini")) Service.Start("PCInfoParcer");
-                                else Process.Start("PCInfoParser-Client-NET-Service-Configurator.exe");
+                        var appPath = Assembly.GetExecutingAssembly().Location;
+                        System.Configuration.Install.ManagedInstallerClass.InstallHelper(new string[] { appPath });
+                        if (File.Exists("PCInfoParser-Client.ini")) Service.Start("PCInfoParcer");
+                        else Process.Start("PCInfoParser-Client-NET-Service-Configurator.exe");
 
-                            }
-                            catch (Exception ex) { Console.WriteLine(ex.Message); }
-                            break;
-                        case "--uninstall":
-                            try
-                            {
-                                var appPath = Assembly.GetExecutingAssembly().Location;
-                                System.Configuration.Install.ManagedInstallerClass.InstallHelper(new string[] { "/u", appPath });
-                            }
-                            catch (Exception ex) { Console.WriteLine(ex.Message); }
-                            break;
                     }
-                }
+                    catch (Exception ex) { Console.WriteLine(ex.Message); }
             }
             else
             {

@@ -42,9 +42,9 @@ namespace PCInfoParser_Client_NET_Service
             // 
             // serviceInstaller1
             // 
-            this.serviceInstaller1.Description = "Парсит характеристики ПК в файл";
-            this.serviceInstaller1.DisplayName = "Служба PCInfoParcer";
-            this.serviceInstaller1.ServiceName = "PCInfoParcer";
+            this.serviceInstaller1.Description = "Отправляет характеристики ПК на сервер";
+            this.serviceInstaller1.DisplayName = "Служба PCInfoParser";
+            this.serviceInstaller1.ServiceName = "PCInfoParser v2";
             this.serviceInstaller1.StartType = ServiceStartMode.Automatic;
             // 
             // ProjectInstaller
