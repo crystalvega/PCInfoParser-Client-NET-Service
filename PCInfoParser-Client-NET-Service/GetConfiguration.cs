@@ -97,7 +97,7 @@ namespace PCInfoParser_Client_NET_Service
         }
         private void GeneralGenerateCPUZ()
         {
-            string directory = Path.Combine(Command.AssemblyDirectory(), "CPU-Z");
+            string directory = "C:\\Windows\\Temp";
             string exePath = Path.Combine(directory, "cpuz_x32.exe");
             string arguments = "-txt=report";
             Process.Start(exePath, arguments).WaitForExit();
