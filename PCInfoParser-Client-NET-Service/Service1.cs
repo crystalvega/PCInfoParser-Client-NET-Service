@@ -46,7 +46,7 @@ namespace PCInfoParser_Client_NET_Service
 
                 if (difference.TotalDays > Convert.ToInt32(checkdays) || firstsend)
                 {
-                    configuration.Generate();
+                    configuration.Generate(false);
                     string[,,] smart = configuration.SmartGet();
                     string[,] general = configuration.GeneralGet();
                     string lan = configuration.Lan();
